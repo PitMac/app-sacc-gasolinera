@@ -45,6 +45,8 @@ const CustomPicker = (props) => {
       </Pressable>
       <Modal
         transparent={true}
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
         animationType="fade"
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}

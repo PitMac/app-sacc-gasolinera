@@ -1,6 +1,5 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   Linking,
@@ -9,7 +8,6 @@ import {
   Pressable,
   StyleSheet,
   KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import WhatsappSVG from "../../assets/images/misc/whatsapp.svg";
@@ -24,6 +22,7 @@ import useAuthStore from "../stores/AuthStore";
 import instance from "../utils/Instance";
 import { TextInput } from "react-native-paper";
 import { sharedStyles } from "../styles/SharedStyles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -100,6 +99,7 @@ export default function LoginScreen() {
 
     try {
       const res = await instance.post(LOGIN_ENDPOINT, data);
+
       const response = res.data;
       mergeStorage(
         { encodetoken: response.access_token, userData: response.user },
@@ -113,6 +113,7 @@ export default function LoginScreen() {
         setIsOpenPeriodoFiscal(true);
       }
     } catch (error) {
+      console.error(error);
       setIsLoading(false);
       Alert.alert(
         "Alerta",

@@ -103,7 +103,7 @@ export default function ResumenModalComponent(props) {
   };
 
   return (
-    <>
+    <View style={{flex: 1}}>
       {dataResumen.length === 0 && (
         <View style={styles.loadingModal}>
           <View
@@ -165,7 +165,7 @@ export default function ResumenModalComponent(props) {
         <View style={styles.contentContainer}>{renderContent()}</View>
       </View>
 
-    </>
+    </View>
   );
 }
 

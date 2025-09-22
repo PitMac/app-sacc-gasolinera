@@ -5,6 +5,7 @@ import CustomAppBar from "./CustomAppBar";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { Divider } from "react-native-paper";
 import { sharedStyles } from "../styles/SharedStyles";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 export default function ListClientesByPlacaComponent({
                                                        periodofiscal_id,
@@ -15,6 +16,7 @@ export default function ListClientesByPlacaComponent({
                                                      }) {
 
   const [clientes, setClientes] = useState([]);
+  const insets = useSafeAreaInsets();
   const keyExtractor = (item, index) => index.toString();
 
   useEffect(() => {
@@ -69,7 +71,7 @@ export default function ListClientesByPlacaComponent({
   };
 
   return (
-    <View>
+    <View style={{ flex: 1, paddingBottom: insets.bottom }}>
       <CustomAppBar
         center={true}
         bold={true}

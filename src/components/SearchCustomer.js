@@ -1,4 +1,15 @@
-import { View, Text, Alert, StyleSheet, SafeAreaView, FlatList, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Alert,
+  StyleSheet,
+  FlatList,
+  Pressable,
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import React, { useEffect, useState } from "react";
 import { getToken } from "../utils/Utils";
 import Loader from "./Loader";
@@ -10,9 +21,9 @@ import CustomAppBar from "./CustomAppBar";
 import { sharedStyles } from "../styles/SharedStyles";
 
 export default function SearchCustomer(props) {
+  const insets = useSafeAreaInsets();
   const { actionCloseModal, actionClick, navigation } = props;
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
   const [selectedOption, setSelectedOption] = useState("nombre");
   const [isloading, setIsLoading] = useState(false);
   const [periodofiscal_id, setPeriodofiscal_id] = useState(0);
@@ -36,29 +47,42 @@ export default function SearchCustomer(props) {
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
-    setShowDropdown(false);
   };
 
   const searchCustomer = async () => {
     setIsLoading(true);
     try {
-      const searchInPath = searchQuery.replaceAll("%", "&&").replaceAll("/", "~~");
-      const parameterSearch = selectedOption === "all" ? searchInPath : selectedOption + ":" + searchInPath;
-      const response = await instance.get(`api/v1/cartera/cliente/search/${periodofiscal_id}/${selectedOption}:${parameterSearch !== "" ? searchInPath : "&&"}`,
+      const searchInPath = searchQuery
+        .replaceAll("%", "&&")
+        .replaceAll("/", "~~");
+      const parameterSearch =
+        selectedOption === "all"
+          ? searchInPath
+          : selectedOption + ":" + searchInPath;
+      const response = await instance.get(
+        `api/v1/cartera/cliente/search/${periodofiscal_id}/${selectedOption}:${
+          parameterSearch !== "" ? searchInPath : "&&"
+        }`,
         {
           params: {
             type_search: selectedOption,
-            ismobile: true
-          }
+            ismobile: true,
+          },
         }
       );
       if (response.data.status === 200) {
         setClientes(response.data.items);
       } else {
-        Alert.alert("Información", "Hubo un problema al consultar los clientes");
+        Alert.alert(
+          "Información",
+          "Hubo un problema al consultar los clientes"
+        );
       }
     } catch (error) {
-      Alert.alert("Alerta", "Hubo un problema al consultar los clientes en el servidor");
+      Alert.alert(
+        "Alerta",
+        "Hubo un problema al consultar los clientes en el servidor"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -71,14 +95,21 @@ export default function SearchCustomer(props) {
           onPress={() => actionClick(item)}
           style={({ pressed }) => [
             styles.clientes,
-            pressed && sharedStyles.pressed
+            pressed && sharedStyles.pressed,
           ]}
         >
           <View style={{ marginRight: 5 }}>
-            <Ionicons name="person-circle-outline" size={30} color="#d5a203" style={styles.searchIcon} />
+            <Ionicons
+              name="person-circle-outline"
+              size={30}
+              color="#d5a203"
+              style={styles.searchIcon}
+            />
           </View>
           <View>
-            <Text>{item.codigo} | {item.nombrecompleto}</Text>
+            <Text>
+              {item.codigo} | {item.nombrecompleto}
+            </Text>
             <Text>Ruc: {item.numeroidentificacion}</Text>
           </View>
         </Pressable>
@@ -88,7 +119,7 @@ export default function SearchCustomer(props) {
   };
 
   return (
-    <View style={styles.contentModal}>
+    <View style={[styles.contentModal, { paddingBottom: insets.bottom + 10 }]}>
       <CustomAppBar
         center={true}
         rightIcon="close"
@@ -102,7 +133,7 @@ export default function SearchCustomer(props) {
           items={[
             { label: "Codigo", value: "codigo" },
             { label: "Nombre", value: "nombre" },
-            { label: "Ruc", value: "ruc" }
+            { label: "Ruc", value: "ruc" },
           ]}
           selectedValue={selectedOption}
           onValueChange={(value, index) => {
@@ -121,11 +152,11 @@ export default function SearchCustomer(props) {
           value={searchQuery}
           onChangeText={setSearchQuery}
           onSubmitEditing={searchCustomer}
-          keyboardType={(selectedOption === "nombre") ? "text" : "number-pad"}
+          keyboardType={selectedOption === "nombre" ? "text" : "number-pad"}
         />
         <View style={{ width: 10 }} />
       </View>
-      <SafeAreaView style={{ height: "100%", marginTop: showDropdown ? 100 : 10 }}>
+      <SafeAreaView style={{ flex: 1, marginTop: 10 }}>
         <FlatList
           keyExtractor={(item, index) => index.toString()}
           data={clientes}
@@ -144,10 +175,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     height: 40,
-    marginHorizontal: 5
+    marginHorizontal: 5,
   },
   dropdownIcon: {
-    marginRight: 5
+    marginRight: 5,
   },
   dropdown: {
     position: "absolute",
@@ -157,12 +188,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    zIndex: 2
+    zIndex: 2,
   },
   option: {
     fontSize: 12,
     color: "#000",
-    paddingVertical: 5
+    paddingVertical: 5,
   },
   searchBar: {
     backgroundColor: "#fff",
@@ -171,19 +202,19 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     fontSize: 12,
     color: "#000",
-    flex: 1
+    flex: 1,
   },
   searchIcon: {
     marginLeft: 7,
-    paddingTop: 7
+    paddingTop: 7,
   },
   contentModal: {
     flex: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)"
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   clientes: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 20,
-  }
+  },
 });

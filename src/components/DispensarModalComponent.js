@@ -9,7 +9,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Alert,
-  Pressable,
+  Pressable, Touchable,
 } from "react-native";
 import React from "react";
 import CustomAppBar from "./CustomAppBar";
@@ -22,8 +22,10 @@ import CustomCheckBox from "./CustomCheckBox";
 import CustomButton from "./CustomButton";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { sharedStyles } from "../styles/SharedStyles";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 function DispensarModalComponent(props) {
+  const insets = useSafeAreaInsets();
   const {
     setObjHeadBilling,
     valorDispensar,
@@ -89,21 +91,21 @@ function DispensarModalComponent(props) {
         onRightPress={closeModal}
         title={selectedSurtidor ? selectedSurtidor.nombre.toUpperCase() : ""}
       />
-      <Modal animationType="slide" visible={searchPersonModal}>
+      <Modal navigationBarTranslucent={true} statusBarTranslucent={true} animationType="slide" visible={searchPersonModal}>
         <SearchCustomer
           actionCloseModal={closeModalClientes}
           actionClick={callCliente}
         />
       </Modal>
-      <Modal animationType="slide" visible={isOpenModalPruebasTecnicas}>
+      <Modal navigationBarTranslucent={true} statusBarTranslucent={true} animationType="slide" visible={isOpenModalPruebasTecnicas}>
         {renderPruebasModal()}
       </Modal>
-      <Modal animationType="slide" visible={isOpenModalHabilitarDispensador}>
+      <Modal navigationBarTranslucent={true} statusBarTranslucent={true} animationType="slide" visible={isOpenModalHabilitarDispensador}>
         {renderHabilitarModal()}
       </Modal>
-      <Pressable onPress={Keyboard.dismiss}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 15 }}
           keyboardShouldPersistTaps="handled"
         >
           <View style={{ paddingHorizontal: 5 }}>
@@ -767,7 +769,7 @@ function DispensarModalComponent(props) {
               )}
           </View>
         </ScrollView>
-      </Pressable>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }

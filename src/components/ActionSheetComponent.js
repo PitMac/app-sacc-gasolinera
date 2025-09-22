@@ -5,17 +5,21 @@ import {
   StyleSheet,
   Pressable,
 } from "react-native";
-import React from "react";
 import ActionSheet from "react-native-actions-sheet";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { sharedStyles } from "../styles/SharedStyles";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ActionSheetComponent(props) {
+  const insets = useSafeAreaInsets();
   const { actionSheetRef, buttons } = props;
   return (
     <View>
-      <ActionSheet containerStyle={{ padding: 8 }} ref={actionSheetRef}>
+      <ActionSheet
+        containerStyle={{ padding: 8, paddingBottom: insets.bottom }}
+        ref={actionSheetRef}
+      >
         <View style={{ alignItems: "flex-end" }}>
           <TouchableOpacity onPress={() => actionSheetRef.current?.hide()}>
             <Ionicons name="close" size={36} color="#000" />

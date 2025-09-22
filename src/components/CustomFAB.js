@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { sharedStyles } from "../styles/SharedStyles";
@@ -12,6 +12,7 @@ export default function CustomFAB(props) {
     icon = "add",
     align = "right",
   } = props;
+
   return (
     <SafeAreaView
       style={[
@@ -44,7 +45,7 @@ export default function CustomFAB(props) {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    bottom: 20,
+    bottom: 10,
     zIndex: 999,
   },
   fab: {

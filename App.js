@@ -7,9 +7,9 @@ import {
 } from "react-native-paper";
 import "react-native-gesture-handler";
 import ModalOption from "./src/components/AlertOptionsComponent";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
 import useThemeStore from "./src/stores/ThemeStore";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const theme = {
   ...DefaultTheme,
@@ -28,15 +28,15 @@ const darkTheme = {
   ...DefaultDarkTheme,
   colors: {
     ...DefaultDarkTheme.colors,
-    primary: "#e6b31e", // amarillo fuerte
+    primary: "#e6b31e",
     secondary: "#947415",
     secondaryContainer: "#e6b31e",
     onSecondaryContainer: "black",
-    background: "#1e1e1e", // gris oscuro profundo
-    surface: "#2a2a2a", // para tarjetas/modales/etc.
-    onBackground: "#f5f5f5", // texto claro
+    background: "#1e1e1e",
+    surface: "#2a2a2a",
+    onBackground: "#f5f5f5",
     onSurface: "#f5f5f5",
-    outline: "#444", // líneas y bordes
+    outline: "#444",
   },
 };
 
@@ -46,11 +46,11 @@ function App() {
 
   return (
     <PaperProvider theme={currentTheme}>
-      <StatusBar
-        barStyle={isDarkTheme ? "light-content" : "dark-content"}
-        backgroundColor={currentTheme.colors.background}
-      />
       <SafeAreaProvider>
+        <StatusBar
+          barStyle={isDarkTheme ? "light-content" : "dark-content"}
+          backgroundColor={currentTheme.colors.background}
+        />
         <ModalOption />
         <NavigationContainer theme={currentTheme}>
           <Navigator />

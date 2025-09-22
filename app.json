@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "app-sacc-gasolinera",
+    "name": "Gasolinera SACC",
     "slug": "app-sacc-gasolinera",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,15 +16,30 @@
       "supportsTablet": true
     },
     "android": {
-      "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.pitmac.appsaccgasolinera"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "158e3553-3121-4a36-bd69-6b1dd16aa469"
+      }
     }
   }
 }

@@ -11,13 +11,8 @@ import {
   BackHandler,
   Pressable,
 } from "react-native";
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import {
-  currentDate,
-  getToken,
-  sleep,
-  validateFormatPlaca,
-} from "../utils/Utils";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { currentDate, getToken, validateFormatPlaca } from "../utils/Utils";
 import {
   useFocusEffect,
   useIsFocused,
@@ -51,7 +46,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { sharedStyles } from "../styles/SharedStyles";
 
 export default function HomeScreen() {
-  const isDesarrollo = true;
+  const isDesarrollo = false;
 
   const isDrawerOpen = useDrawerStatus() === "open";
   const showModal = useModalStore((state) => state.showModal);
@@ -268,7 +263,7 @@ export default function HomeScreen() {
 
     return () => {
       if (socketGeneral) {
-        socketGeneral.off("logoutUser"); // Limpiar el evento al desmontar el componente
+        socketGeneral.off("logoutUser");
       }
     };
   }, []);
@@ -623,9 +618,14 @@ export default function HomeScreen() {
 
   const obtenerDatosHTTP = async () => {
     const url = (conexionTransactor?.url_get ?? "") + "/readlast";
+
     if (url !== "") {
       try {
         const response = await instance.get(url);
+        /*const response = await instance.get(
+          "http://192.168.100.25:3008/readlast"
+        );*/
+
         const resp = response.data;
         verificarTurnoActivo();
         procesarDatos(resp.data);
@@ -704,7 +704,7 @@ export default function HomeScreen() {
         arrCodigoSurtidores.includes(x[0])
     );
 
-    if (arrValidacion.length === 0) {
+    if (arrValidacion.length == 0) {
       setIsOpenCierreTurno(true);
     } else {
       Alert.alert(
@@ -2991,14 +2991,12 @@ export default function HomeScreen() {
 
   const openTurnoModal = () => {
     return (
-      <View>
-        <HabilitarTurno
-          closeModal={() => {
-            setIsOpenOpenTurno(false);
-            setRefreshData(!refreshData);
-          }}
-        />
-      </View>
+      <HabilitarTurno
+        closeModal={() => {
+          setIsOpenOpenTurno(false);
+          setRefreshData(!refreshData);
+        }}
+      />
     );
   };
 
@@ -3035,25 +3033,57 @@ export default function HomeScreen() {
         animationType="fade"
         visible={modalVisible}
         onRequestClose={closeModalDispensar}
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
       >
         {renderModal()}
       </Modal>
-      <Modal animationType="slide" visible={isOpenModalAddCustomer}>
+      <Modal
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        animationType="slide"
+        visible={isOpenModalAddCustomer}
+      >
         {openAddCustomer()}
       </Modal>
-      <Modal animationType="slide" visible={isOpenOpenTurno}>
+      <Modal
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        animationType="slide"
+        visible={isOpenOpenTurno}
+      >
         {openTurnoModal()}
       </Modal>
-      <Modal animationType="slide" visible={searchDepositoModal}>
+      <Modal
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        animationType="slide"
+        visible={searchDepositoModal}
+      >
         {renderDepositoModal()}
       </Modal>
-      <Modal animationType="slide" visible={searchListModal}>
+      <Modal
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        animationType="slide"
+        visible={searchListModal}
+      >
         {renderListPlacaModal()}
       </Modal>
-      <Modal animationType="slide" visible={isOpenCierreTurno}>
+      <Modal
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        animationType="slide"
+        visible={isOpenCierreTurno}
+      >
         {cierreTurnoModal()}
       </Modal>
-      <Modal animationType="slide" visible={searchResumenModal}>
+      <Modal
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        animationType="slide"
+        visible={searchResumenModal}
+      >
         {resumenModal()}
       </Modal>
       <ActionSheetComponent
@@ -3119,6 +3149,7 @@ export default function HomeScreen() {
                   actionSheetRef.current?.show();
                 }}
               />
+
               <CustomFAB
                 color={"#d5a203"}
                 align="left"
@@ -3419,20 +3450,57 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
       ) : (
-        <View style={{ justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ textAlign: "center", fontSize: 20 }}>
-            El turno no está habilitado.
-          </Text>
-          <CustomButton
-            label={"Habilitar Turno"}
-            onPress={() => setIsOpenOpenTurno(true)}
-          />
-          <Image
-            contentFit="contain"
-            style={{ width: "80%", height: "70%" }}
-            source={require("../../assets/images/list_empty.png")}
-          />
-        </View>
+        <>
+          {turnoActivo.estado_turno === "P" ? (
+            <View style={{ alignItems: "center", marginTop: 20 }}>
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 20,
+                  fontWeight: "500",
+                  marginBottom: 15,
+                }}
+              >
+                El turno no está habilitado.
+              </Text>
+              <CustomButton
+                label={"Habilitar Turno"}
+                onPress={() => setIsOpenOpenTurno(true)}
+              />
+              <View style={{ height: "60%" }}>
+                <Image
+                  source={require("../../assets/images/list_empty.png")}
+                  style={{
+                    height: "100%",
+                  }}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
+          ) : (
+            <View style={{ alignItems: "center", marginTop: 20 }}>
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 20,
+                  fontWeight: "500",
+                  marginBottom: 15,
+                }}
+              >
+                El turno ya está cerrado.
+              </Text>
+              <View style={{ height: "60%" }}>
+                <Image
+                  source={require("../../assets/images/list_empty.png")}
+                  style={{
+                    height: "100%",
+                  }}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
+          )}
+        </>
       )}
     </>
   );

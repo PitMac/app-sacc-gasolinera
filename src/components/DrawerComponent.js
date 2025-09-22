@@ -28,6 +28,8 @@ const DrawerComponent = (props) => {
         flex: 1,
         justifyContent: "space-between",
         backgroundColor: theme.colors.background,
+        paddingStart: 0,
+        paddingEnd: 0,
       }}
       {...props}
     >
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#e6b31e",
     marginTop: -4,
     marginBottom: 15,
-    height: 200,
+    height: 210,
     alignItems: "flex-start",
     justifyContent: "center",
     paddingHorizontal: 10,

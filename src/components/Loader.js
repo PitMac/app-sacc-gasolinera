@@ -6,11 +6,13 @@ const Loader = (props) => {
   const { loading, modalStyle, indicatorStyle } = props;
   return (
     <Modal
+      navigationBarTranslucent={true}
+      statusBarTranslucent={true}
       transparent={true}
       animationType={"fade"}
       visible={loading}
-      onRequestClose={() => {
-      }}>
+      onRequestClose={() => {}}
+    >
       <View style={[styles.modalBackground, modalStyle]}>
         <View style={[styles.activityIndicatorWrapper, indicatorStyle]}>
           <SkypeIndicator color="#d5a203" size={60} />
@@ -25,7 +27,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     flexDirection: "column",
-    justifyContent: "space-around",
+    justifyContent: "center",
     backgroundColor: "#00000080",
     zIndex: 1000
   },
@@ -36,7 +38,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-around",
+    justifyContent: "center",
   },
 });
 

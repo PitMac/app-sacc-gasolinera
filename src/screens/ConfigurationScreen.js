@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, SafeAreaView, Alert, Modal, Pressable } from "react-native";
+import { View, Text, StyleSheet, Alert, Modal, Pressable } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
@@ -12,12 +12,15 @@ import CustomAppBar from "../components/CustomAppBar";
 import CustomCheckBox from "../components/CustomCheckBox";
 import { sharedStyles } from "../styles/SharedStyles";
 import useThemeStore from "../stores/ThemeStore";
+import {
+  useSafeAreaInsets,
+  SafeAreaView,
+} from "react-native-safe-area-context";
 
 export default function ConfigurationScreen() {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const logout = useAuthStore((state) => state.logout);
-  const toggleTheme = useThemeStore((state) => state.toggleTheme);
-  const isDarkTheme = useThemeStore((state) => state.isDarkTheme);
   const [isloading, setIsLoading] = useState(false);
   const [refreshData, setRefreshData] = useState(false);
   const [usuario, setUsuario] = useState({
@@ -85,7 +88,7 @@ export default function ConfigurationScreen() {
             text: "Ok",
             onPress: () => logout(),
           },
-        ],
+        ]
       );
     } else {
       setModalPeriodo(false);
@@ -94,16 +97,12 @@ export default function ConfigurationScreen() {
 
   const saveSelectedEstaciones = () => {
     if (selectedEstaciones.length === 0) {
-      Alert.alert(
-        "INFORMACIÓN",
-        "Debe seleccionar al menos una estacion",
-        [
-          {
-            text: "Ok",
-          },
-        ],
-      );
-      return
+      Alert.alert("INFORMACIÓN", "Debe seleccionar al menos una estacion", [
+        {
+          text: "Ok",
+        },
+      ]);
+      return;
     }
     setModalEstaciones(false);
     mergeStorage({ listEstaciones: selectedEstaciones }, "configuration");
@@ -115,7 +114,7 @@ export default function ConfigurationScreen() {
           text: "Ok",
           onPress: () => navigation.navigate("Home"),
         },
-      ],
+      ]
     );
   };
 
@@ -124,7 +123,9 @@ export default function ConfigurationScreen() {
       setIsLoading(true);
 
       try {
-        const resp = await instance.get(`api/v1/general/datos/maestros/configuracion/usuario/${periodoFiscal}`);
+        const resp = await instance.get(
+          `api/v1/general/datos/maestros/configuracion/usuario/${periodoFiscal}`
+        );
         if (resp.data.status === 200) {
           const uniqueStations = new Map();
 
@@ -159,20 +160,29 @@ export default function ConfigurationScreen() {
               defaultCiudad: resp.data.defaultCiudad,
               defaultPais: resp.data.defaultPais,
             },
-            "configuration",
+            "configuration"
           );
 
           setdatosEstaciones(data);
         } else {
-          Alert.alert("Información", "Hubo un problema al consultar la configuración opcional del usuario en el servidor");
+          Alert.alert(
+            "Información",
+            "Hubo un problema al consultar la configuración opcional del usuario en el servidor"
+          );
         }
       } catch (error) {
-        Alert.alert("Alerta", "Hubo un problema al consultar la configuración opcional del usuario en el servidor");
+        Alert.alert(
+          "Alerta",
+          "Hubo un problema al consultar la configuración opcional del usuario en el servidor"
+        );
       } finally {
         setIsLoading(false);
       }
     } else {
-      Alert.alert("Información", "Debe Seleccionar un periodo fiscal para poder recargar la configuración");
+      Alert.alert(
+        "Información",
+        "Debe Seleccionar un periodo fiscal para poder recargar la configuración"
+      );
     }
   };
 
@@ -188,12 +198,18 @@ export default function ConfigurationScreen() {
           }}
           title={"PERIODO ACTIVO"}
         />
-        <View style={styles.contentModal}>
+        <View style={[styles.contentModal, { paddingBottom: insets.bottom }]}>
           <SafeAreaView style={{ flex: 1 }}>
             {Object.keys(groupedData).map((key) => {
               return (
                 <View key={key} style={{ paddingTop: 10 }}>
-                  <Text style={{ fontWeight: "bold", color: "#e6b31e", fontSize: 15 }}>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      color: "#e6b31e",
+                      fontSize: 15,
+                    }}
+                  >
                     &bull; {key}
                   </Text>
                   <View>
@@ -235,7 +251,7 @@ export default function ConfigurationScreen() {
           }}
           title={"Configuracion de Estaciones"}
         />
-        <View style={styles.contentModal}>
+        <View style={[styles.contentModal, { paddingBottom: insets.bottom }]}>
           <SafeAreaView style={{ flex: 1 }}>
             {datosEstaciones.map((surtidor, index) => {
               const isSelected = selectedEstaciones.includes(surtidor.id);
@@ -261,11 +277,21 @@ export default function ConfigurationScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
-      <Modal visible={modalPeriodo}>
+    <View style={{ flex: 1 }}>
+      <Modal
+        animationType={"slide"}
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        visible={modalPeriodo}
+      >
         {renderModalPeriodo()}
       </Modal>
-      <Modal visible={modalEstaciones}>
+      <Modal
+        animationType={"slide"}
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        visible={modalEstaciones}
+      >
         {renderModalEstacion()}
       </Modal>
       <CustomAppBar
@@ -283,7 +309,7 @@ export default function ConfigurationScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.box,
-              pressed && sharedStyles.pressed
+              pressed && sharedStyles.pressed,
             ]}
             onPress={() => setModalPeriodo(true)}
           >
@@ -294,7 +320,7 @@ export default function ConfigurationScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.box,
-              pressed && sharedStyles.pressed
+              pressed && sharedStyles.pressed,
             ]}
             onPress={() => refreshParametrizacionApp(respIdPeriodoSelect)}
           >
@@ -308,7 +334,7 @@ export default function ConfigurationScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.box,
-              pressed && sharedStyles.pressed
+              pressed && sharedStyles.pressed,
             ]}
             onPress={() => setModalEstaciones(true)}
           >
@@ -317,7 +343,7 @@ export default function ConfigurationScreen() {
           </Pressable>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -330,9 +356,8 @@ const styles = StyleSheet.create({
   },
   contentModal: {
     flex: 1,
-    backgroundColor: "#F2F2F2",
+    backgroundColor: "white",
     padding: 20,
-    paddingBottom: "15%",
   },
   box: {
     height: 125,

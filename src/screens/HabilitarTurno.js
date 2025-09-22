@@ -4,7 +4,7 @@ import {
   StyleSheet,
   ScrollView,
   ToastAndroid,
-  Alert
+  Alert,
 } from "react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { Button, TextInput } from "react-native-paper";
@@ -15,6 +15,7 @@ import instance from "../utils/Instance";
 import { useDeviceOrientation } from "@react-native-community/hooks";
 import CustomButton from "../components/CustomButton";
 import CustomAppBar from "../components/CustomAppBar";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
   const navigation = useNavigation();
@@ -29,14 +30,13 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
     conectado: false,
     isConected: false,
     url: "",
-    conectionId: ""
+    conectionId: "",
   });
 
   useFocusEffect(
     useCallback(() => {
       callDataInitial();
-      return () => {
-      };
+      return () => {};
     }, [])
   );
 
@@ -44,46 +44,64 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
     const data = await getToken("configuration");
     const localstorage = await getToken("configuration");
     const arrIdsEstaciones = localstorage.listEstaciones;
-    const arrEstaciones = localstorage.estaciones.filter((x) => arrIdsEstaciones.includes(x.id) && data.turnoActivo.estaciones.includes(x.id));
+    const arrEstaciones = localstorage.estaciones.filter(
+      (x) =>
+        arrIdsEstaciones.includes(x.id) &&
+        data.turnoActivo.estaciones.includes(x.id)
+    );
     const arrSurtidoresS = localstorage.surtidores;
     setListArrSurtidores(localstorage.surtidores);
     const fechaActual = new Date();
-    const codigoUnicoMovil = `${localstorage.userData.username.substring(0, 4)}${fechaActual.getTime()}`;
+    const codigoUnicoMovil = `${localstorage.userData.username.substring(
+      0,
+      4
+    )}${fechaActual.getTime()}`;
 
     setCodigoMovil(codigoUnicoMovil);
     setEstaciones(arrEstaciones);
     if (status === "I") {
-      const arrId = arrEstaciones.map(objeto => objeto.id);
+      const arrId = arrEstaciones.map((objeto) => objeto.id);
       const ids = arrId.join(",");
-      const arrSurtidores = arrSurtidoresS.filter((x) => ids.includes(x.estacion_id));
-      const arrIdSurtidores = arrSurtidores.map(objeto => objeto.id);
+      const arrSurtidores = arrSurtidoresS.filter((x) =>
+        ids.includes(x.estacion_id)
+      );
+      const arrIdSurtidores = arrSurtidores.map((objeto) => objeto.id);
       const idsSurtidores = arrIdSurtidores.join(",");
       setIsLoading(true);
-      instance.get(`api/v1/gasolinera/lectura/surtidores/list/${localstorage.periodofiscal_id}/${idsSurtidores !== "" ? idsSurtidores : 0}`)
+      instance
+        .get(
+          `api/v1/gasolinera/lectura/surtidores/list/${
+            localstorage.periodofiscal_id
+          }/${idsSurtidores !== "" ? idsSurtidores : 0}`
+        )
         .then((resp) => {
           if (resp.data.status === 200) {
             if (resp.data.items.length > 0) {
               const changeData = localstorage.surtidores.map((item) => {
-                const informationTransactor = resp.data.items.find((x) => x.surtidor_id === item.id);
+                const informationTransactor = resp.data.items.find(
+                  (x) => x.surtidor_id === item.id
+                );
                 if (informationTransactor) {
                   return {
                     ...item,
                     galonaje: informationTransactor.lecturafinal,
-                    disabled: true
+                    disabled: true,
                   };
                 } else {
                   return {
                     ...item,
-                    disabled: true
+                    disabled: true,
                   };
                 }
               });
               setSurtidores(changeData);
             } else {
-              setSurtidores(localstorage.surtidores.map(item => ({
-                ...item,
-                galonaje: 0
-              })));
+              setSurtidores(
+                localstorage.surtidores.map((item) => ({
+                  ...item,
+                  galonaje: 0,
+                }))
+              );
             }
           }
           setIsLoading(false);
@@ -117,19 +135,26 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
         !conexionTransactor.conectado &&
         parseInt(localstorage.configurationUser.establecimiento_id) > 0
       ) {
-        const establecimientoObj = localstorage.establecimiento.find((x) => x.id === parseInt(localstorage.configurationUser.establecimiento_id));
-        const additional_services = JSON.parse(establecimientoObj?.additional_services ?? "{}");
-        const conexion_transactor = JSON.parse(additional_services?.conexion_transactor ?? "{}");
+        const establecimientoObj = localstorage.establecimiento.find(
+          (x) =>
+            x.id === parseInt(localstorage.configurationUser.establecimiento_id)
+        );
+        const additional_services = JSON.parse(
+          establecimientoObj?.additional_services ?? "{}"
+        );
+        const conexion_transactor = JSON.parse(
+          additional_services?.conexion_transactor ?? "{}"
+        );
         const url = conexion_transactor?.url ?? "";
         let objConexion = {
           conectado_get: true,
           conectado_post: true,
           url_get: url,
-          url_post: url
+          url_post: url,
         };
         setConexionTransactor({
           ...conexionTransactor,
-          ...objConexion
+          ...objConexion,
         });
       }
     }
@@ -139,12 +164,19 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
 
   const callDataLecturaTransactor = async (keyFila, url) => {
     setIsLoading(true);
-    const dataPost = { comando: `GT ${keyFila}@#` };
+    const dataPost = { comando: `GT ${keyFila}@#`, url };
     let data;
-    await instance.post(url, dataPost, {
-      headers: { "Content-Type": "application/json" }
-    })
+    console.log(url);
+
+    await instance
+      .post(url, dataPost, {
+        //.post("http://192.168.100.25:3008/puente", dataPost, {
+        headers: { "Content-Type": "application/json" },
+        timeout: 10000,
+      })
       .then((resp) => {
+        console.log(resp);
+
         if (resp.data?.title === "Lectura exitosa" && resp.data.data !== "") {
           const clearData = resp.data.data.split("\r\n");
           const arrData = (clearData[1] ?? "").split(",");
@@ -155,18 +187,27 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
             return clearData[1];
           } else {
             setIsLoading(false);
-            ToastAndroid.show("Hubo un problema al obtener la informacion del comando,datos incompletos", ToastAndroid.SHORT);
+            ToastAndroid.show(
+              "Hubo un problema al obtener la informacion del comando,datos incompletos",
+              ToastAndroid.SHORT
+            );
             return null;
           }
         } else {
           setIsLoading(false);
-          ToastAndroid.show("Hubo un problema al obtener la informacion del comando", ToastAndroid.SHORT);
+          ToastAndroid.show(
+            "Hubo un problema al obtener la informacion del comando",
+            ToastAndroid.SHORT
+          );
           return null;
         }
       })
       .catch((error) => {
+        setIsLoading(false);
+        console.log(error.response);
+
         let messageError = "";
-        if (error.response.data) {
+        if (error.response?.data) {
           if (error.response.data.detail) {
             messageError = error.response.data.detail;
           } else if (error.response.data.error.message) {
@@ -175,45 +216,67 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
             messageError = error.response.data.error;
           }
         }
-        setIsLoading(false);
-        ToastAndroid.show("Hubo un problema al obtener la informacion del comando " + messageError, ToastAndroid.SHORT);
+        ToastAndroid.show(
+          "Hubo un problema al obtener la informacion del comando " +
+            messageError,
+          ToastAndroid.SHORT
+        );
       });
     return data;
   };
 
   const bloquearDesbloquearSurtidor = async (codigoFila, tipoComando) => {
     setIsLoading(true);
-    const url = (conexionTransactor?.url_post ?? "") + "/" + (conexionTransactor?.conectionId_post ?? "") + "/commands/";
-    const dataPost = { comando: `${tipoComando} ${codigoFila}@#` };
-    instance.get(url, dataPost)
-      .then((resp) => {
-        if (resp.data?.title === "Lectura exitosa" && resp.data.data !== "") {
-          const clearData = resp.data.data.split("\r\n");
-          const arrData = (clearData[1] ?? "").split(",");
-          const lastElement = arrData[arrData.length - 1];
+    const url =
+      (conexionTransactor?.url_post ?? "") +
+      "/" +
+      (conexionTransactor?.conectionId_post ?? "") +
+      "/commands/";
+    const dataPost = { comando: `${tipoComando} ${codigoFila}@#`, url };
+    instance.get(url, dataPost).then((resp) => {
+      if (resp.data?.title === "Lectura exitosa" && resp.data.data !== "") {
+        const clearData = resp.data.data.split("\r\n");
+        const arrData = (clearData[1] ?? "").split(",");
+        const lastElement = arrData[arrData.length - 1];
 
-          if (lastElement === "OK") {
-            setIsLoading(false);
-            return clearData[1];
-          } else {
-            setIsLoading(false);
-            ToastAndroid.show("Hubo un problema al obtener la informacion del comando,datos incompletos", ToastAndroid.SHORT);
-            return null;
-          }
+        if (lastElement === "OK") {
+          setIsLoading(false);
+          return clearData[1];
         } else {
           setIsLoading(false);
-          ToastAndroid.show("Hubo un problema al obtener la informacion del comando", ToastAndroid.SHORT);
+          ToastAndroid.show(
+            "Hubo un problema al obtener la informacion del comando,datos incompletos",
+            ToastAndroid.SHORT
+          );
           return null;
         }
-      });
+      } else {
+        setIsLoading(false);
+        ToastAndroid.show(
+          "Hubo un problema al obtener la informacion del comando",
+          ToastAndroid.SHORT
+        );
+        return null;
+      }
+    });
   };
 
   const getGalonajeLado = async (estacion, lado) => {
-    const arrFilterFilaSurtidor = listArrSurtidores.filter((x) => x.estacion_id === estacion.id && x.posicion === lado);
+    const arrFilterFilaSurtidor = listArrSurtidores.filter(
+      (x) => x.estacion_id === estacion.id && x.posicion === lado
+    );
     if (arrFilterFilaSurtidor.length > 0) {
-      const codigo_transactor = arrFilterFilaSurtidor[0].codigo_transactor.split(",");
-      const url = (conexionTransactor?.url_post ?? "") + "/" + (conexionTransactor?.conectionId_post ?? "") + "/commands/";
-      const responseTransactor = await callDataLecturaTransactor(codigo_transactor[0], url);
+      const codigo_transactor =
+        arrFilterFilaSurtidor[0].codigo_transactor.split(",");
+      const url =
+        (conexionTransactor?.url_post ?? "") +
+        "/" +
+        (conexionTransactor?.conectionId_post ?? "") +
+        "/commands/";
+      const responseTransactor = await callDataLecturaTransactor(
+        codigo_transactor[0],
+        url
+      );
       if (responseTransactor) {
         const arrResponseTransactor = responseTransactor.split(",");
         arrResponseTransactor.pop();
@@ -222,36 +285,41 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
           groupedArraysInformation.push(arrResponseTransactor.slice(i, i + 4));
         }
         const changeData = surtidores.map((item) => {
-          const informationTransactor = groupedArraysInformation.find((x) => codigo_transactor[0] + "," + x[1] === item.codigo_transactor);
+          const informationTransactor = groupedArraysInformation.find(
+            (x) => codigo_transactor[0] + "," + x[1] === item.codigo_transactor
+          );
           if (informationTransactor) {
             return {
               ...item,
               galonaje: informationTransactor[2],
               ingresomanual_inicial: false,
               ingresomanual_final: false,
-              disabled: parseFloat(informationTransactor[2]) > 0
+              disabled: parseFloat(informationTransactor[2]) > 0,
             };
           } else {
             return {
               ...item,
               ingresomanual_inicial: false,
               ingresomanual_final: false,
-              disabled: true
+              disabled: true,
             };
           }
         });
         setSurtidores(changeData);
       } else {
         const arrFilterDataHabilitar = surtidores.map((item) => {
-          if ((item.codigo_transactor.split(",")[0] ?? "") === codigo_transactor[0]) {
+          if (
+            (item.codigo_transactor.split(",")[0] ?? "") ===
+            codigo_transactor[0]
+          ) {
             return {
               ...item,
-              disabled: false
+              disabled: false,
             };
           } else {
             return {
               ...item,
-              disabled: true
+              disabled: true,
             };
           }
         });
@@ -262,12 +330,14 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
 
   const changeValorManual = (value, surtidor) => {
     let arrSurtidores = [...surtidores];
-    const indice = arrSurtidores.findIndex(objeto => objeto.id === surtidor.id);
+    const indice = arrSurtidores.findIndex(
+      (objeto) => objeto.id === surtidor.id
+    );
     arrSurtidores[indice] = {
       ...arrSurtidores[indice],
       galonaje: value,
       ingresomanual_inicial: true,
-      ingresomanual_final: true
+      ingresomanual_final: true,
     };
     setSurtidores(arrSurtidores);
   };
@@ -290,22 +360,32 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
             galonaje: data.galonaje ?? 0,
             valor: listapvp[1],
             ingresomanual_inicial: data.ingresomanual_inicial,
-            ingresomanual_final: data.ingresomanual_final
+            ingresomanual_final: data.ingresomanual_final,
           };
         });
       if (arrSurtidor.length > 0) {
         filtersurtidores.push(...arrSurtidor);
       }
     });
-    const arrUniqueFilaCodesTransactor = Array.from(uniqueFilaCodesTransactor).sort((a, b) => parseInt(a) - parseInt(b));
-    const validateData = filtersurtidores.filter((item) => item.galonaje === "" || parseFloat(item.galonaje) === 0);
+    const arrUniqueFilaCodesTransactor = Array.from(
+      uniqueFilaCodesTransactor
+    ).sort((a, b) => parseInt(a) - parseInt(b));
+    const validateData = filtersurtidores.filter(
+      (item) => item.galonaje === "" || parseFloat(item.galonaje) === 0
+    );
     if (validateData.length === 0) {
       const dataUpdate = {
         estado_turno: status,
         surtidores: filtersurtidores,
-        codigomovil: codigoMovil
+        codigomovil: codigoMovil,
       };
-      instance.put(`api/v1/gasolinera/asignacion/turnos/update/status/${turnoActivo.asignacionturno_id ?? 0}`, JSON.stringify(dataUpdate))
+      instance
+        .put(
+          `api/v1/gasolinera/asignacion/turnos/update/status/${
+            turnoActivo.asignacionturno_id ?? 0
+          }`,
+          JSON.stringify(dataUpdate)
+        )
         .then((resp) => {
           if (resp.data.status === 202) {
             //if (parametrizacionObj.habilitarBloquearSurtidor) {
@@ -327,7 +407,9 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
         })
         .catch((err) => {
           setIsLoading(false);
-          const errorMessage = err.response?.data?.error?.message || "Hubo un error inesperado. Intente nuevamente.";
+          const errorMessage =
+            err.response?.data?.error?.message ||
+            "Hubo un error inesperado. Intente nuevamente.";
           Alert.alert("Error", errorMessage);
         });
     } else {
@@ -344,7 +426,12 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
       <View style={styles.surtidoresContainer}>
         <View style={styles.surtidorColumn}>
           <Button
-            style={{ padding: 0, borderRadius: 10, marginHorizontal: 10, marginVertical: 5 }}
+            style={{
+              padding: 0,
+              borderRadius: 10,
+              marginHorizontal: 10,
+              marginVertical: 5,
+            }}
             icon="reload"
             mode="contained-tonal"
             onPress={() => getGalonajeLado(item, "R")}
@@ -370,7 +457,12 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
         </View>
         <View style={styles.surtidorColumn}>
           <Button
-            style={{ padding: 0, borderRadius: 10, marginHorizontal: 10, marginVertical: 5 }}
+            style={{
+              padding: 0,
+              borderRadius: 10,
+              marginHorizontal: 10,
+              marginVertical: 5,
+            }}
             icon="reload"
             mode="contained-tonal"
             onPress={() => getGalonajeLado(item, "L")}
@@ -399,7 +491,7 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
   );
 
   return (
-    <>
+    <SafeAreaView style={{ flex: 1 }}>
       <Loader loading={isLoading} />
       <CustomAppBar
         center={true}
@@ -408,37 +500,53 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
         title={status === "I" ? "Habilitacion de Turno" : "Cerrar el turno"}
         bold={true}
       />
-      <ScrollView>
+      <ScrollView style={{ flex: 1 }}>
         {estaciones.length > 0 && (
           <>
-            {estaciones.map((item, index) => {
-              const stationsPerRow = orientation === "portrait" ? 1 : 3;
-              if (index % stationsPerRow !== 0) {
-                return null;
-              }
-              const rowItems = estaciones.slice(index, index + stationsPerRow);
-              return (
-                <View key={index} style={styles.row}>
-                  {rowItems.map((rowItem, rowIndex) => (
-                    <View key={rowIndex} style={styles.estacionContainer}>
-                      {renderEstacion(rowItem, surtidores)}
-                    </View>
-                  ))}
-                </View>
-              );
-            })}
-            <View style={{ marginHorizontal: 15 }}>
+            <>
+              {estaciones.map((item, index) => {
+                const stationsPerRow = orientation === "portrait" ? 1 : 3;
+                if (index % stationsPerRow !== 0) {
+                  return null;
+                }
+                const rowItems = estaciones.slice(
+                  index,
+                  index + stationsPerRow
+                );
+                return (
+                  <View key={index} style={styles.row}>
+                    {rowItems.map((rowItem, rowIndex) => (
+                      <View key={rowIndex} style={styles.estacionContainer}>
+                        {renderEstacion(rowItem, surtidores)}
+                      </View>
+                    ))}
+                  </View>
+                );
+              })}
+            </>
+            <View style={{ marginHorizontal: 15, marginBottom: 20 }}>
               <CustomButton
                 onPress={() => saveGalonajeSurtidores()}
-                label={status === "I" ? "Activar Turno" : "Cerrar Turno"} />
+                label={status === "I" ? "Activar Turno" : "Cerrar Turno"}
+              />
             </View>
           </>
         )}
         {estaciones.length === 0 && (
           <View style={{ marginHorizontal: 15 }}>
-            <View style={{ borderRadius: 10, backgroundColor: "#f0f0f0", marginTop: 30, paddingVertical: 20 }}>
-              <Text style={{ textAlign: "center", fontWeight: "500", fontSize: 16 }}>
-                LAS ESTACIONES CONFIGURADAS NO COINCIDEN CON EL TURNO ASIGNADO, VERIFIQUE LA ASIGNACION DEL TURNO
+            <View
+              style={{
+                borderRadius: 10,
+                backgroundColor: "#f0f0f0",
+                marginTop: 30,
+                paddingVertical: 20,
+              }}
+            >
+              <Text
+                style={{ textAlign: "center", fontWeight: "500", fontSize: 16 }}
+              >
+                LAS ESTACIONES CONFIGURADAS NO COINCIDEN CON EL TURNO ASIGNADO,
+                VERIFIQUE LA ASIGNACION DEL TURNO
               </Text>
             </View>
             <View style={{ marginTop: 30 }}>
@@ -447,29 +555,30 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
                   closeModal();
                   navigation.navigate("Configuration");
                 }}
-                label={"Configurar Estaciones"} />
+                label={"Configurar Estaciones"}
+              />
             </View>
           </View>
         )}
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   estacionContainer: {
     flex: 1,
-    margin: 10
+    margin: 10,
   },
   surtidoresContainer: {
-    flexDirection: "row"
+    flexDirection: "row",
   },
   surtidorColumn: {
     flex: 1,
-    margin: 5
-  }
+    margin: 5,
+  },
 });
