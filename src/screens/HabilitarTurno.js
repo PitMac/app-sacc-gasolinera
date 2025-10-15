@@ -166,7 +166,6 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
     setIsLoading(true);
     const dataPost = { comando: `GT ${keyFila}@#`, url };
     let data;
-    console.log(url);
 
     await instance
       .post(url, dataPost, {
@@ -175,8 +174,6 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
         timeout: 10000,
       })
       .then((resp) => {
-        console.log(resp);
-
         if (resp.data?.title === "Lectura exitosa" && resp.data.data !== "") {
           const clearData = resp.data.data.split("\r\n");
           const arrData = (clearData[1] ?? "").split(",");
@@ -204,7 +201,6 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
       })
       .catch((error) => {
         setIsLoading(false);
-        console.log(error.response);
 
         let messageError = "";
         if (error.response?.data) {

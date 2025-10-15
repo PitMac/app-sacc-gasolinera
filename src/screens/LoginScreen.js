@@ -173,9 +173,7 @@ export default function LoginScreen() {
               },
             }
           );
-        } catch (error) {
-          console.log(error);
-        }
+        } catch (error) {}
         await login();
       } else {
         Alert.alert(
@@ -185,7 +183,6 @@ export default function LoginScreen() {
         await logout();
       }
     } catch (error) {
-      console.log(error);
       let messageError = "";
       if (error.response && error.response.data) {
         messageError =

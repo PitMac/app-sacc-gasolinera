@@ -846,6 +846,7 @@ export default function HomeScreen() {
         const arrAnticipos = (objHeadBilling.arrPagosanticipados ?? []).filter(
           (x) => x.producto_id === item.producto_id
         );
+
         if (arrAnticipos.length >= 1) {
           setObjHeadBilling({
             ...objHeadBilling,
@@ -2857,6 +2858,12 @@ export default function HomeScreen() {
   };
 
   const callCLienteByPlaca = (cliente) => {
+    const pagos = cliente.pagosanticipados
+      ? typeof cliente.pagosanticipados === "string"
+        ? JSON.parse(cliente.pagosanticipados)
+        : cliente.pagosanticipados
+      : [];
+
     setObjHeadBilling({
       ...objHeadBilling,
       cliente_id: cliente.id,
@@ -2865,7 +2872,25 @@ export default function HomeScreen() {
       n_identificacion: cliente.numeroidentificacion,
       direccion: cliente.direccion ?? "",
       correo: cliente.correo ?? "",
+      arrPagosanticipados: cliente.pagoanticipado ?? false ? pagos : [],
+      pagoanticipado: cliente.pagoanticipado ?? false,
     });
+
+    let arrAnticipos = [];
+    if (cliente.pagoanticipado) {
+      const objBoquilla = (selectedSurtidor?.boquillas ?? []).find(
+        (x) => x.codigo_boquilla === valorDispensar.boquilla
+      );
+
+      if (objBoquilla) {
+        arrAnticipos = (pagos ?? []).filter(
+          (x) => x.producto_id === objBoquilla.producto_id && x.total > 0
+        );
+
+        setFacturasAnticipadas(arrAnticipos);
+      }
+    }
+
     setSearchListModal(false);
   };
 

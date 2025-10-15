@@ -9,20 +9,21 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Alert,
-  Pressable, Touchable,
+  Pressable,
+  Touchable,
 } from "react-native";
 import React from "react";
 import CustomAppBar from "./CustomAppBar";
 import SearchCustomer from "./SearchCustomer";
 import CustomPicker from "./CustomPicker";
-import { TextInput, Tooltip } from "react-native-paper";
+import { Chip, TextInput, Tooltip } from "react-native-paper";
 import PersonaSVG from "../../assets/images/misc/user.svg";
 import SettinsSVG from "../../assets/images/misc/settings.svg";
 import CustomCheckBox from "./CustomCheckBox";
 import CustomButton from "./CustomButton";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { sharedStyles } from "../styles/SharedStyles";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function DispensarModalComponent(props) {
   const insets = useSafeAreaInsets();
@@ -91,16 +92,31 @@ function DispensarModalComponent(props) {
         onRightPress={closeModal}
         title={selectedSurtidor ? selectedSurtidor.nombre.toUpperCase() : ""}
       />
-      <Modal navigationBarTranslucent={true} statusBarTranslucent={true} animationType="slide" visible={searchPersonModal}>
+      <Modal
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        animationType="slide"
+        visible={searchPersonModal}
+      >
         <SearchCustomer
           actionCloseModal={closeModalClientes}
           actionClick={callCliente}
         />
       </Modal>
-      <Modal navigationBarTranslucent={true} statusBarTranslucent={true} animationType="slide" visible={isOpenModalPruebasTecnicas}>
+      <Modal
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        animationType="slide"
+        visible={isOpenModalPruebasTecnicas}
+      >
         {renderPruebasModal()}
       </Modal>
-      <Modal navigationBarTranslucent={true} statusBarTranslucent={true} animationType="slide" visible={isOpenModalHabilitarDispensador}>
+      <Modal
+        navigationBarTranslucent={true}
+        statusBarTranslucent={true}
+        animationType="slide"
+        visible={isOpenModalHabilitarDispensador}
+      >
         {renderHabilitarModal()}
       </Modal>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -502,6 +518,23 @@ function DispensarModalComponent(props) {
               </>
             )}
             {selectedSurtidor &&
+              selectedSurtidor.isFacturaAnticipo &&
+              selectedSurtidor.proforma &&
+              !selectedSurtidor?.proforma?.pruebatecnica && (
+                <View style={{ marginTop: 10, alignSelf: "flex-start" }}>
+                  <Chip
+                    mode="outlined"
+                    selectedColor="#d5a203"
+                    style={{ borderWidth: 2 }}
+                    selected={true}
+                    textStyle={{ textAlign: "center", alignContent: "center" }}
+                  >
+                    Factura Anticipada
+                  </Chip>
+                </View>
+              )}
+            {selectedSurtidor &&
+              !selectedSurtidor.isFacturaAnticipo &&
               selectedSurtidor.proforma &&
               !selectedSurtidor?.proforma?.pruebatecnica && (
                 <>

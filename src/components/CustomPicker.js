@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Modal, FlatList, StyleSheet, SafeAreaView, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Modal,
+  FlatList,
+  StyleSheet,
+  Pressable,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { TextInput } from "react-native-paper";
 import { sharedStyles } from "../styles/SharedStyles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const CustomPicker = (props) => {
   const { items, onValueChange, dropdownIconColor, text } = props;
@@ -15,7 +23,7 @@ const CustomPicker = (props) => {
     if (!searchText.trim()) {
       setFilteredItems(items);
     } else {
-      const filtered = items.filter(item =>
+      const filtered = items.filter((item) =>
         item.label.toLowerCase().includes(searchText.toLowerCase())
       );
       setFilteredItems(filtered);
@@ -32,16 +40,29 @@ const CustomPicker = (props) => {
       <Pressable
         style={({ pressed }) => [
           styles.pickerButton,
-          pressed && sharedStyles.pressed
+          pressed && sharedStyles.pressed,
         ]}
         onPress={() => setModalVisible(true)}
       >
-        <Ionicons name="chevron-down-sharp" size={24}
-                  color={text.includes("SELECCIONE") ? "grey" : dropdownIconColor} />
-        {
-          text && <Text
-            style={{ color: text.includes("SELECCIONE") ? "grey" : dropdownIconColor, marginHorizontal: 5 }}>{text}</Text>
-        }
+        <Ionicons
+          name="chevron-down-sharp"
+          size={24}
+          color={
+            String(text).includes("SELECCIONE") ? "grey" : dropdownIconColor
+          }
+        />
+        {text && (
+          <Text
+            style={{
+              color: String(text).includes("SELECCIONE")
+                ? "grey"
+                : dropdownIconColor,
+              marginHorizontal: 5,
+            }}
+          >
+            {text}
+          </Text>
+        )}
       </Pressable>
       <Modal
         transparent={true}
@@ -76,15 +97,23 @@ const CustomPicker = (props) => {
                 <Pressable
                   style={({ pressed }) => [
                     styles.modalItem,
-                    pressed && sharedStyles.pressed
+                    pressed && sharedStyles.pressed,
                   ]}
                   onPress={() => handleValueChange(item.value, index)}
                 >
                   <View style={styles.itemContent}>
-                    <Text style={styles.modalItemText} numberOfLines={2} ellipsizeMode="tail">
+                    <Text
+                      style={styles.modalItemText}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
                       {item.label}
                     </Text>
-                    <Ionicons name="chevron-forward-circle-sharp" size={35} color={"grey"} />
+                    <Ionicons
+                      name="chevron-forward-circle-sharp"
+                      size={35}
+                      color={"grey"}
+                    />
                   </View>
                 </Pressable>
               )}
@@ -101,7 +130,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%"
+    width: "100%",
   },
   pickerButton: {
     flexDirection: "row",
@@ -112,15 +141,15 @@ const styles = StyleSheet.create({
     borderColor: "#d5a203",
     borderRadius: 5,
     marginVertical: 5,
-    height: 40
+    height: 40,
   },
   pickerButtonText: {
-    color: "#000"
+    color: "#000",
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   modalContainer: {
     marginTop: 5,
@@ -133,25 +162,25 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5
+    elevation: 5,
   },
   modalItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd"
+    borderBottomColor: "#ddd",
   },
   modalItemText: {
     fontSize: 18,
     flexShrink: 1,
-    marginRight: 10
+    marginRight: 10,
   },
-  items: { alignItems: "flex-end", paddingRight: 18, paddingTop: 25 }
+  items: { alignItems: "flex-end", paddingRight: 18, paddingTop: 25 },
 });
 
 export default CustomPicker;
