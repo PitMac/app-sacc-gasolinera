@@ -16,13 +16,15 @@ import FacebookSVG from "../../assets/images/misc/facebook.svg";
 import InstagramSVG from "../../assets/images/misc/instagram.svg";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Loader from "../components/Loader";
-import CustomButton from "../components/CustomButton";
 import { getToken, mergeStorage } from "../utils/Utils";
 import useAuthStore from "../stores/AuthStore";
 import instance from "../utils/Instance";
-import { TextInput } from "react-native-paper";
+import { Button, TextInput } from "react-native-paper";
 import { sharedStyles } from "../styles/SharedStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { showAlert } from "../components/CustomAlert";
+import { Colors } from "../utils/Colors";
+import { Image } from "expo-image";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -61,16 +63,17 @@ export default function LoginScreen() {
   const getLicensed = async () => {
     const configuration = await getToken("configuration");
     if (!(configuration && "licensed" in configuration)) {
-      Alert.alert(
-        "INFORMACIÓN",
-        "No se ha obtenido una licencia, a continuacion será redirigido a esta ventana para que la obtenga",
-        [
+      showAlert({
+        title: "INFORMACIÓN",
+        message:
+          "No se ha obtenido una licencia, a continuacion será redirigido a esta ventana para que la obtenga",
+        actions: [
           {
-            text: "Ok",
+            label: "Ok",
             onPress: () => navigation.navigate("Licensed"),
           },
-        ]
-      );
+        ],
+      });
       return;
     } else {
       setObjLicensed(configuration.licensed);
@@ -82,7 +85,10 @@ export default function LoginScreen() {
 
   const actionLogin = async () => {
     if (username === "" || password === "") {
-      Alert.alert("INFORMACIÓN", "Campos incompletos, por favor verifique");
+      showAlert({
+        title: "INFORMACIÓN",
+        message: "Campos incompletos, por favor verifique",
+      });
       return;
     }
     setIsLoading(true);
@@ -115,10 +121,11 @@ export default function LoginScreen() {
     } catch (error) {
       console.error(error);
       setIsLoading(false);
-      Alert.alert(
-        "Alerta",
-        "Ha ocurrido un problema de conexión con el servidor, por favor verifique su conexión a internet"
-      );
+      showAlert({
+        title: "Alerta",
+        message:
+          "Ha ocurrido un problema de conexión con el servidor, por favor verifique su conexión a internet",
+      });
     }
   };
 
@@ -176,10 +183,11 @@ export default function LoginScreen() {
         } catch (error) {}
         await login();
       } else {
-        Alert.alert(
-          "INFORMACIÓN",
-          "Hubo un problema al consultar la configuración opcional del usuario en el servidor"
-        );
+        showAlert({
+          title: "INFORMACIÓN",
+          message:
+            "Hubo un problema al consultar la configuración opcional del usuario en el servidor",
+        });
         await logout();
       }
     } catch (error) {
@@ -190,11 +198,10 @@ export default function LoginScreen() {
           error.response.data.error.message ||
           "Error desconocido";
       }
-
-      Alert.alert(
-        "INFORMACIÓN",
-        `Hubo un problema al consultar la configuración opcional del usuario en el servidor: ${messageError}`
-      );
+      showAlert({
+        title: "INFORMACIÓN",
+        message: `Hubo un problema al consultar la configuración opcional del usuario en el servidor: ${messageError}`,
+      });
       await logout();
     } finally {
       setIsLoading(false);
@@ -232,7 +239,11 @@ export default function LoginScreen() {
               }}
             >
               <Text
-                style={{ fontWeight: "bold", color: "#e6b31e", fontSize: 15 }}
+                style={{
+                  fontWeight: "bold",
+                  color: Colors.primary,
+                  fontSize: 15,
+                }}
               >
                 &bull; {key}
               </Text>
@@ -240,6 +251,7 @@ export default function LoginScreen() {
                 {groupedData[key].map((item, index) => {
                   return (
                     <Pressable
+                      key={index}
                       onPress={() => {
                         setIsOpenPeriodoFiscal(false);
                         loginDatosMaestros(item.id, usuario);
@@ -299,7 +311,15 @@ export default function LoginScreen() {
           <Loader loading={isloading} />
           <View style={{ paddingHorizontal: 15 }}>
             <View style={{ alignItems: "center" }}>
-              <LoginSVG height={350} width={500} />
+              <Image
+                source={require("../../assets/images/logo_gasolinera.png")}
+                style={{
+                  height: 300,
+                  marginBottom: 20,
+                  width: 500,
+                  resizeMode: "contain",
+                }}
+              />
             </View>
             <Text
               style={{
@@ -338,24 +358,31 @@ export default function LoginScreen() {
               style={sharedStyles.textInput}
             />
             <View style={{ height: 15 }} />
-            <CustomButton label={"Iniciar Sesion"} onPress={actionLogin} />
+            <Button
+              buttonColor={Colors.primary}
+              mode="contained"
+              onPress={actionLogin}
+            >
+              Iniciar Sesion
+            </Button>
           </View>
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "center",
-              marginBottom: 30,
+              paddingVertical: 10,
+              paddingHorizontal: 35,
+              marginBottom: 10,
+              justifyContent: "space-between",
             }}
           >
             <Text style={{ color: "#495157" }}>¿No has activado Licencia?</Text>
             <Pressable
               onPress={() => navigation.navigate("Licensed")}
               style={({ pressed }) => ({
-                opacity: pressed ? 0.5 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
               })}
             >
-              <Text style={{ color: "#d5a203", fontWeight: "700" }}>
-                {" "}
+              <Text style={{ color: Colors.primary, fontWeight: "700" }}>
                 Activar
               </Text>
             </Pressable>

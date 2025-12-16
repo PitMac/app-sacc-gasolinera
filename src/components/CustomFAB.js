@@ -1,8 +1,9 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { sharedStyles } from "../styles/SharedStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Colors } from "../utils/Colors";
 
 export default function CustomFAB(props) {
   const {
@@ -26,7 +27,7 @@ export default function CustomFAB(props) {
         style={({ pressed }) => [
           styles.fab,
           pressed && sharedStyles.pressed,
-          { backgroundColor: color },
+          { backgroundColor: Colors.primary },
         ]}
         onPress={onPress}
       >

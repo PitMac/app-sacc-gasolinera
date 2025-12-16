@@ -6,16 +6,16 @@ import {
   ToastAndroid,
   Alert,
 } from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { act, useCallback, useEffect, useState } from "react";
 import { Button, TextInput } from "react-native-paper";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { getToken, mergeStorage } from "../utils/Utils";
 import Loader from "../components/Loader";
 import instance from "../utils/Instance";
 import { useDeviceOrientation } from "@react-native-community/hooks";
-import CustomButton from "../components/CustomButton";
 import CustomAppBar from "../components/CustomAppBar";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { showAlert } from "../components/CustomAlert";
 
 export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
   const navigation = useNavigation();
@@ -44,6 +44,29 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
     const data = await getToken("configuration");
     const localstorage = await getToken("configuration");
     const arrIdsEstaciones = localstorage.listEstaciones;
+    const estacionesTurno = String(data.turnoActivo.estaciones)
+      .split(",")
+      .map((e) => Number(e.trim()));
+
+    const todasEstanIncluidas = estacionesTurno.every((estacion) =>
+      arrIdsEstaciones.includes(estacion)
+    );
+
+    if (!todasEstanIncluidas) {
+      showAlert({
+        title: "Información",
+        message:
+          "No se puede activar el turno. Algunas estaciones del usuario no están seleccionadas en la parametrización.",
+        actions: [
+          {
+            label: "Ok",
+            onPress: () => navigation.navigate("Configuration"),
+          },
+        ],
+      });
+
+      return;
+    }
     const arrEstaciones = localstorage.estaciones.filter(
       (x) =>
         arrIdsEstaciones.includes(x.id) &&
@@ -108,16 +131,15 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
         })
         .catch((e) => {
           setIsLoading(false);
-          Alert.alert("Error");
+          showAlert({
+            title: "Error",
+            message: "Hubo un error",
+          });
         });
     } else {
       setSurtidores(localstorage.surtidores);
     }
   };
-
-  useEffect(() => {
-    callDataInitial();
-  }, []);
 
   useEffect(() => {
     async function getData() {
@@ -406,11 +428,17 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
           const errorMessage =
             err.response?.data?.error?.message ||
             "Hubo un error inesperado. Intente nuevamente.";
-          Alert.alert("Error", errorMessage);
+          showAlert({
+            title: "Error",
+            message: errorMessage,
+          });
         });
     } else {
       setIsLoading(false);
-      Alert.alert("Error", "Existen Lecturas con valor 0, por favor verifique");
+      showAlert({
+        title: "Error",
+        message: "Existen Lecturas con valor 0, por favor verifique",
+      });
     }
   };
 
@@ -521,10 +549,9 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
               })}
             </>
             <View style={{ marginHorizontal: 15, marginBottom: 20 }}>
-              <CustomButton
-                onPress={() => saveGalonajeSurtidores()}
-                label={status === "I" ? "Activar Turno" : "Cerrar Turno"}
-              />
+              <Button mode="contained" onPress={() => saveGalonajeSurtidores()}>
+                {status === "I" ? "Activar Turno" : "Cerrar Turno"}
+              </Button>
             </View>
           </>
         )}
@@ -546,13 +573,15 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
               </Text>
             </View>
             <View style={{ marginTop: 30 }}>
-              <CustomButton
+              <Button
+                mode="contained"
                 onPress={() => {
                   closeModal();
                   navigation.navigate("Configuration");
                 }}
-                label={"Configurar Estaciones"}
-              />
+              >
+                Configurar Estaciones
+              </Button>
             </View>
           </View>
         )}

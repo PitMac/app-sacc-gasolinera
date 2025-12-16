@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, Platform, StatusBar } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Platform,
+  StatusBar,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { sharedStyles } from "../styles/SharedStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -50,7 +57,6 @@ const CustomAppBar = (props) => {
               paddingHorizontal: 10,
               fontSize: 18,
               color: contentColor,
-              fontWeight: bold ? "bold" : "400",
             }}
           >
             {title?.toUpperCase() || ""}

@@ -1,7 +1,13 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import CustomAppBar from "./CustomAppBar";
-import { TextInput } from "react-native-paper";
+import { Button, TextInput } from "react-native-paper";
 import CustomButton from "./CustomButton";
 import { sharedStyles } from "../styles/SharedStyles";
 
@@ -18,15 +24,6 @@ export default function PruebasTecnicasModalComponent(props) {
 
   return (
     <View>
-      <CustomAppBar
-        bold={true}
-        center={true}
-        rightIcon="close"
-        onRightPress={() => {
-          setIsOpenModalPruebasTecnicas(false);
-        }}
-        title={title}
-      />
       <View style={{ paddingHorizontal: 20 }}>
         <View style={{ alignItems: "center" }}>
           <View
@@ -34,7 +31,6 @@ export default function PruebasTecnicasModalComponent(props) {
               flexDirection: "row",
               flexWrap: "wrap",
               justifyContent: "space-around",
-              marginVertical: 7,
             }}
           >
             {(selectedSurtidor?.boquillas ?? []).map((x, index) => {
@@ -42,7 +38,7 @@ export default function PruebasTecnicasModalComponent(props) {
                 <View key={index} style={{ marginBottom: 5 }}>
                   <Pressable
                     onPress={() =>
-                      setValorDispensar(e => ({
+                      setValorDispensar((e) => ({
                         ...e,
                         boquilla: x.codigo_boquilla,
                       }))
@@ -51,10 +47,14 @@ export default function PruebasTecnicasModalComponent(props) {
                       sharedStyles.boquillasStyle,
                       {
                         backgroundColor: x.color,
-                        borderWidth: valorDispensar.boquilla === x.codigo_boquilla ? 3 : 0,
-                        borderColor: valorDispensar.boquilla === x.codigo_boquilla ? "#000000" : "transparent",
+                        borderWidth:
+                          valorDispensar.boquilla === x.codigo_boquilla ? 3 : 0,
+                        borderColor:
+                          valorDispensar.boquilla === x.codigo_boquilla
+                            ? "#000000"
+                            : "transparent",
                       },
-                      pressed && sharedStyles.pressed
+                      pressed && sharedStyles.pressed,
                     ]}
                   >
                     <Text style={sharedStyles.textBoquilla}>{x.tipo}</Text>
@@ -104,7 +104,9 @@ export default function PruebasTecnicasModalComponent(props) {
             </View>
           </View>
           <View style={{ width: 10 }} />
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
             <Text>Valor en Galones:</Text>
             <View
               style={{
@@ -132,17 +134,15 @@ export default function PruebasTecnicasModalComponent(props) {
       </View>
       <View
         style={{
-          marginTop: 10,
+          marginTop: 30,
           alignItems: "center",
           alignContent: "center",
           justifyContent: "center",
         }}
       >
-        <CustomButton
-          style={{ width: "70%" }}
-          label={"Habilitar Dispensador"}
-          onPress={() => actionPruebasTecnicas()}
-        />
+        <Button mode="contained" onPress={() => actionPruebasTecnicas(false)}>
+          Habilitar Dispensador
+        </Button>
       </View>
     </View>
   );

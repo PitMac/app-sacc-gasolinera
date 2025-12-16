@@ -10,15 +10,17 @@ import ModalOption from "./src/components/AlertOptionsComponent";
 import { StatusBar } from "react-native";
 import useThemeStore from "./src/stores/ThemeStore";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import CustomAlert from "./src/components/CustomAlert";
+import { Colors } from "./src/utils/Colors";
 
 const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: "#947415",
+    primary: Colors.primary,
     secondary: "#947415",
-    secondaryContainer: "#e6b31e",
-    onSecondaryContainer: "white",
+    secondaryContainer: Colors.secondary,
+    onSecondaryContainer: Colors.primary,
     onBackground: "#d5a200",
     background: "#f0f0f0",
   },
@@ -46,6 +48,7 @@ function App() {
 
   return (
     <PaperProvider theme={currentTheme}>
+      <CustomAlert />
       <SafeAreaProvider>
         <StatusBar
           barStyle={isDarkTheme ? "light-content" : "dark-content"}

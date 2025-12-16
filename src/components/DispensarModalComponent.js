@@ -16,7 +16,7 @@ import React from "react";
 import CustomAppBar from "./CustomAppBar";
 import SearchCustomer from "./SearchCustomer";
 import CustomPicker from "./CustomPicker";
-import { Chip, TextInput, Tooltip } from "react-native-paper";
+import { Button, Chip, TextInput, Tooltip } from "react-native-paper";
 import PersonaSVG from "../../assets/images/misc/user.svg";
 import SettinsSVG from "../../assets/images/misc/settings.svg";
 import CustomCheckBox from "./CustomCheckBox";
@@ -24,6 +24,9 @@ import CustomButton from "./CustomButton";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { sharedStyles } from "../styles/SharedStyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { showAlert } from "./CustomAlert";
+import { Colors } from "../utils/Colors";
+import CustomModalContainer from "./CustomModalContainer";
 
 function DispensarModalComponent(props) {
   const insets = useSafeAreaInsets();
@@ -79,7 +82,7 @@ function DispensarModalComponent(props) {
     >
       <CustomAppBar
         bold={true}
-        titleColor={"#d5a203"}
+        titleColor={Colors.primary}
         center={true}
         leftIcon={
           permisos?.GASOLINERA?.PERMITE_PRUEBAS_TECNICAS &&
@@ -103,22 +106,13 @@ function DispensarModalComponent(props) {
           actionClick={callCliente}
         />
       </Modal>
-      <Modal
-        navigationBarTranslucent={true}
-        statusBarTranslucent={true}
-        animationType="slide"
+      <CustomModalContainer
         visible={isOpenModalPruebasTecnicas}
+        title={"Pruebas Tecnicas: " + (selectedSurtidor?.nombre ?? "")}
+        onClose={() => setIsOpenModalPruebasTecnicas(false)}
       >
         {renderPruebasModal()}
-      </Modal>
-      <Modal
-        navigationBarTranslucent={true}
-        statusBarTranslucent={true}
-        animationType="slide"
-        visible={isOpenModalHabilitarDispensador}
-      >
-        {renderHabilitarModal()}
-      </Modal>
+      </CustomModalContainer>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
           contentContainerStyle={{ paddingBottom: insets.bottom + 15 }}
@@ -127,7 +121,13 @@ function DispensarModalComponent(props) {
           <View style={{ paddingHorizontal: 5 }}>
             {selectedSurtidor?.proforma &&
               !parametrizacion?.bloquearTipoVenta && (
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <CustomPicker
                     items={[
                       { label: "FACTURA ELECTRONICA", value: "FAC" },
@@ -140,7 +140,6 @@ function DispensarModalComponent(props) {
                         : "TICKET DE VENTA"
                     }
                     onValueChange={setTipoDocumento}
-                    dropdownIconColor={"#d5a203"}
                   />
                 </View>
               )}
@@ -180,7 +179,6 @@ function DispensarModalComponent(props) {
               objHeadBilling.placas?.length <= 1 ? null : (
                 <View style={{ marginLeft: 5 }}>
                   <CustomPicker
-                    dropdownIconColor={"#d5a203"}
                     selectedValue={
                       objHeadBilling.placa !== ""
                         ? objHeadBilling.placa
@@ -219,7 +217,7 @@ function DispensarModalComponent(props) {
                       <Ionicons
                         size={30}
                         name="people-circle-outline"
-                        color={"#d5a203"}
+                        color={Colors.primary}
                       />
                     </Pressable>
                   </View>
@@ -299,7 +297,10 @@ function DispensarModalComponent(props) {
             <Pressable
               onPress={() => {
                 if (objHeadBilling.nombreCliente !== "") {
-                  Alert.alert("Cliente", objHeadBilling.nombreCliente);
+                  showAlert({
+                    title: "Cliente",
+                    message: objHeadBilling.nombreCliente,
+                  });
                 }
               }}
             >
@@ -467,7 +468,6 @@ function DispensarModalComponent(props) {
                         <View style={{ alignItems: "flex-start" }}>
                           <Text>Anticipo</Text>
                           <CustomPicker
-                            dropdownIconColor={"#d5a203"}
                             selectedValue={objHeadBilling.facturaanticipo_id}
                             onValueChange={(itemValue) =>
                               createChangeHandler(
@@ -492,28 +492,26 @@ function DispensarModalComponent(props) {
                       )}
                   </View>
                 )}
-                <CustomButton
-                  label={"Habilitar Dispensador"}
-                  disabled={isloading}
-                  onPress={() => searchPlaca(true)}
-                />
+                <Button mode="contained" onPress={() => searchPlaca(true)}>
+                  Habilitar Dispensador
+                </Button>
               </View>
             )}
             {selectedSurtidor && selectedSurtidor.proforma && (
               <>
                 <View style={{ marginTop: 10 }}>
-                  <CustomButton
-                    label={
-                      selectedSurtidor?.proforma?.pruebatecnica
-                        ? "Guardar Prueba"
-                        : "Guardar Factura"
-                    }
+                  <Button
+                    mode="contained"
                     onPress={() =>
                       selectedSurtidor?.proforma?.pruebatecnica
                         ? sendEgreso()
                         : sendFacturacion()
                     }
-                  />
+                  >
+                    {selectedSurtidor?.proforma?.pruebatecnica
+                      ? "Guardar Prueba"
+                      : "Guardar Factura"}
+                  </Button>
                 </View>
               </>
             )}
@@ -524,7 +522,7 @@ function DispensarModalComponent(props) {
                 <View style={{ marginTop: 10, alignSelf: "flex-start" }}>
                   <Chip
                     mode="outlined"
-                    selectedColor="#d5a203"
+                    selectedColor={Colors.primary}
                     style={{ borderWidth: 2 }}
                     selected={true}
                     textStyle={{ textAlign: "center", alignContent: "center" }}
@@ -575,7 +573,6 @@ function DispensarModalComponent(props) {
                               index
                             );
                           }}
-                          dropdownIconColor={"#d5a203"}
                         />
                       </View>
                     </>
@@ -626,7 +623,6 @@ function DispensarModalComponent(props) {
                                 ? selectedEstablecimientoContable?.nombreEstablecimiento?.toUpperCase()
                                 : "SELECCIONE UN BANCO"
                             }
-                            dropdownIconColor={"#d5a203"}
                             selectedValue={objPago.establecimiento_contable_id}
                             onValueChange={(itemValue, itemIndex) =>
                               createChangeHandler(
@@ -674,7 +670,6 @@ function DispensarModalComponent(props) {
                                   ? selectedBanco?.name?.toUpperCase()
                                   : "SELECCIONE UN BANCO"
                               }
-                              dropdownIconColor={"#d5a203"}
                               selectedValue={objPago.banco_id}
                               onValueChange={(itemValue, itemIndex) =>
                                 createChangeHandlerPago(
@@ -721,7 +716,6 @@ function DispensarModalComponent(props) {
                                 }}
                               >
                                 <CustomPicker
-                                  dropdownIconColor={"#d5a203"}
                                   selectedValue={objPago.tarjeta_id}
                                   text={
                                     selectedTarjeta?.name

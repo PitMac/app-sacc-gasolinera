@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  Alert,
-  SafeAreaView,
   ScrollView,
   Pressable,
   KeyboardAvoidingView,
@@ -12,11 +10,13 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { mergeStorage } from "../utils/Utils";
 import Loader from "../components/Loader";
-import LoginSVG from "../../assets/images/misc/logo_control.svg";
-import CustomButton from "../components/CustomButton";
 import axios from "axios";
-import { TextInput } from "react-native-paper";
+import { Button, TextInput } from "react-native-paper";
 import { sharedStyles } from "../styles/SharedStyles";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { showAlert } from "../components/CustomAlert";
+import { Colors } from "../utils/Colors";
+import { Image } from "expo-image";
 
 export default function LicensedScreen() {
   const navigation = useNavigation();
@@ -60,16 +60,19 @@ export default function LicensedScreen() {
     setIsLoading(true);
 
     if (ruc.trim() === "") {
-      Alert.alert("Información", "Debe ingresar un RUC válido!");
+      showAlert({
+        title: "Información",
+        message: "Debe ingresar un RUC válido!",
+      });
       setIsLoading(false);
       return;
     }
 
     if (password.trim() === "") {
-      Alert.alert(
-        "Información",
-        "Debe ingresar una contraseña, por favor verifique!"
-      );
+      showAlert({
+        title: "Información",
+        message: "Debe ingresar una contraseña, por favor verifique!",
+      });
       setIsLoading(false);
       return;
     }
@@ -99,22 +102,28 @@ export default function LicensedScreen() {
           "configuration"
         );
 
-        Alert.alert(
-          "Confirmación",
-          "Su licencia se validó de manera satisfactoria!",
-          [{ text: "Ok", onPress: () => navigation.navigate("Login") }]
-        );
+        showAlert({
+          title: "Confirmación",
+          message: "Su licencia se validó de manera satisfactoria!",
+          actions: [
+            {
+              label: "Ok",
+              onPress: () => navigation.navigate("Login"),
+            },
+          ],
+        });
       } else {
-        Alert.alert(
-          "Información",
-          "Datos de licencia no válidos, por favor digite nuevamente!"
-        );
+        showAlert({
+          title: "Información",
+          message: "Datos de licencia no válidos, por favor digite nuevamente!",
+        });
       }
     } catch (error) {
-      Alert.alert(
-        "Error",
-        "Upps, ha ocurrido un error. Contacte con el administrador o verifique su conexión a internet."
-      );
+      showAlert({
+        title: "Error",
+        message:
+          "Upps, ha ocurrido un error. Contacte con el administrador o verifique su conexión a internet.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +142,11 @@ export default function LicensedScreen() {
           <Loader loading={isloading} />
           <View style={{ paddingHorizontal: 15 }}>
             <View style={{ alignItems: "center" }}>
-              <LoginSVG height={300} width={300} />
+              <Image
+                style={{ width: 350, height: 300 }}
+                contentFit="contain"
+                source={require("../../assets/images/logo_control.png")}
+              />
             </View>
             <Text
               style={{
@@ -172,14 +185,16 @@ export default function LicensedScreen() {
               style={sharedStyles.textInput}
             />
             <View style={{ height: 20 }} />
-            <CustomButton
-              label={"Verificar Licencia"}
-              onPress={handleLicensed}
-            />
+            <Button mode="contained" onPress={handleLicensed}>
+              Verificar Licencia
+            </Button>
+
             <View
               style={{
                 flexDirection: "row",
-                justifyContent: "center",
+                paddingVertical: 10,
+                paddingHorizontal: 15,
+                justifyContent: "space-between",
               }}
             >
               <Text style={{ color: "#495157" }}>
@@ -187,10 +202,11 @@ export default function LicensedScreen() {
               </Text>
               <Pressable
                 onPress={() => navigation.goBack()}
-                style={({ pressed }) => [pressed && sharedStyles.pressed]}
+                style={({ pressed }) => ({
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                })}
               >
-                <Text style={{ color: "#d5a203", fontWeight: "700" }}>
-                  {" "}
+                <Text style={{ color: Colors.primary, fontWeight: "700" }}>
                   Iniciar sesión
                 </Text>
               </Pressable>

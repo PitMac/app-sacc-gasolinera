@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,18 +5,89 @@ import {
   FlatList,
   StyleSheet,
   Pressable,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import { TextInput } from "react-native-paper";
-import { sharedStyles } from "../styles/SharedStyles";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useState, useEffect } from "react";
+import Animated, {
+  useSharedValue,
+  withTiming,
+  useAnimatedStyle,
+  Easing,
+  runOnJS,
+} from "react-native-reanimated";
+import { TextInput, useTheme } from "react-native-paper";
+import GlobalIcon from "./GlobalIcon";
+import { Colors } from "../utils/Colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const CustomPicker = (props) => {
+export default function CustomPicker(props) {
   const { items, onValueChange, dropdownIconColor, text } = props;
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+
   const [modalVisible, setModalVisible] = useState(false);
+  const [internalVisible, setInternalVisible] = useState(false);
 
   const [searchText, setSearchText] = useState("");
   const [filteredItems, setFilteredItems] = useState(items || []);
+
+  const screenHeight = 800;
+  const translateY = useSharedValue(screenHeight);
+
+  const keyboardOffset = useSharedValue(0);
+
+  const onKeyboardShow = (height) => {
+    keyboardOffset.value = withTiming(height, { duration: 250 });
+  };
+
+  const onKeyboardHide = () => {
+    keyboardOffset.value = withTiming(0, { duration: 250 });
+  };
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+      runOnJS(onKeyboardShow)(e.endCoordinates.height);
+    });
+
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      runOnJS(onKeyboardHide)();
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const openModal = () => {
+    setInternalVisible(true);
+    setModalVisible(true);
+
+    translateY.value = withTiming(0, {
+      duration: 300,
+      easing: Easing.out(Easing.ease),
+    });
+  };
+
+  const closeModal = () => {
+    translateY.value = withTiming(
+      screenHeight,
+      {
+        duration: 260,
+        easing: Easing.in(Easing.ease),
+      },
+      () => {
+        runOnJS(setInternalVisible)(false);
+        runOnJS(setModalVisible)(false);
+        runOnJS(setSearchText)("");
+      }
+    );
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value - keyboardOffset.value }],
+  }));
 
   useEffect(() => {
     if (!searchText.trim()) {
@@ -30,157 +100,183 @@ const CustomPicker = (props) => {
     }
   }, [searchText, items]);
 
-  const handleValueChange = (itemValue, itemIndex) => {
-    onValueChange(itemValue, itemIndex);
-    setModalVisible(false);
+  const handleSelect = (value, index) => {
+    closeModal();
+    onValueChange(value, index);
   };
 
+  const isPlaceholder = String(text).includes("SELECCIONE");
+
   return (
-    <View>
+    <>
       <Pressable
+        onPress={openModal}
         style={({ pressed }) => [
           styles.pickerButton,
-          pressed && sharedStyles.pressed,
+          {
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          },
         ]}
-        onPress={() => setModalVisible(true)}
       >
-        <Ionicons
+        <GlobalIcon
+          family="ion"
           name="chevron-down-sharp"
           size={24}
-          color={
-            String(text).includes("SELECCIONE") ? "grey" : dropdownIconColor
-          }
+          color={isPlaceholder ? "grey" : Colors.primary}
         />
-        {text && (
+        <View style={styles.textWrapper}>
           <Text
-            style={{
-              color: String(text).includes("SELECCIONE")
-                ? "grey"
-                : dropdownIconColor,
-              marginHorizontal: 5,
-            }}
+            numberOfLines={1}
+            style={{ color: isPlaceholder ? "grey" : dropdownIconColor }}
           >
             {text}
           </Text>
-        )}
+        </View>
       </Pressable>
+
       <Modal
-        transparent={true}
-        navigationBarTranslucent={true}
-        statusBarTranslucent={true}
+        transparent
+        statusBarTranslucent
+        navigationBarTranslucent
         animationType="fade"
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={styles.items}>
-            <Pressable
-              onPress={() => setModalVisible(false)}
-              style={({ pressed }) => [pressed && sharedStyles.pressed]}
-            >
-              <Ionicons name="close-sharp" size={35} color={"white"} />
-            </Pressable>
-          </View>
-          <View style={styles.modalContainer}>
+        <TouchableWithoutFeedback onPress={closeModal}>
+          <View style={styles.backdrop} />
+        </TouchableWithoutFeedback>
+
+        <Animated.View style={[styles.sheetContainer, animatedStyle]}>
+          <View style={[styles.sheet, { paddingBottom: insets.bottom + 10 }]}>
+            <View style={styles.header}>
+              <Text style={styles.headerText}>Seleccionar</Text>
+              <Pressable onPress={closeModal}>
+                {({ pressed }) => (
+                  <View
+                    style={{
+                      padding: 5,
+                      transform: [{ scale: pressed ? 0.98 : 1 }],
+                    }}
+                  >
+                    <GlobalIcon
+                      family="ion"
+                      name="close"
+                      size={30}
+                      color="#000"
+                    />
+                  </View>
+                )}
+              </Pressable>
+            </View>
+
             <TextInput
-              label={"Buscar..."}
-              mode={"outlined"}
+              label="Buscar..."
+              mode="outlined"
               value={searchText}
               onChangeText={setSearchText}
-              style={sharedStyles.textInput}
+              style={{ backgroundColor: "white", marginBottom: 12 }}
             />
-            <View style={{ height: 10 }} />
+
             <FlatList
               data={filteredItems}
               keyExtractor={(item) => item.value}
-              renderItem={({ item, index }) => (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.modalItem,
-                    pressed && sharedStyles.pressed,
-                  ]}
-                  onPress={() => handleValueChange(item.value, index)}
-                >
-                  <View style={styles.itemContent}>
+              style={{ maxHeight: 350 }}
+              renderItem={({ item, index }) => {
+                const isSelected = text === item.label;
+                return (
+                  <Pressable
+                    onPress={() => handleSelect(item.value, index)}
+                    style={({ pressed }) => [
+                      styles.item,
+                      {
+                        transform: [{ scale: pressed ? 0.98 : 1 }],
+                      },
+                    ]}
+                  >
                     <Text
-                      style={styles.modalItemText}
-                      numberOfLines={2}
-                      ellipsizeMode="tail"
+                      style={{
+                        fontSize: 16,
+                        color: isSelected ? theme.colors.primary : "#000",
+                      }}
                     >
                       {item.label}
                     </Text>
-                    <Ionicons
-                      name="chevron-forward-circle-sharp"
-                      size={35}
-                      color={"grey"}
-                    />
-                  </View>
-                </Pressable>
-              )}
+
+                    {isSelected && (
+                      <GlobalIcon
+                        family="ion"
+                        name="checkmark-circle-sharp"
+                        size={22}
+                        color={theme.colors.primary}
+                      />
+                    )}
+                  </Pressable>
+                );
+              }}
             />
           </View>
-        </SafeAreaView>
+        </Animated.View>
       </Modal>
-    </View>
+    </>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  itemContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-  },
   pickerButton: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 5,
-    borderWidth: 1,
-    borderColor: "#d5a203",
-    borderRadius: 5,
-    marginVertical: 5,
-    height: 40,
-  },
-  pickerButtonText: {
-    color: "#000",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-  },
-  modalContainer: {
-    marginTop: 5,
-    maxHeight: "60%",
-    marginHorizontal: 20,
-    marginBottom: 50,
     backgroundColor: "white",
-    borderRadius: 10,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    alignItems: "center",
+    borderColor: "#79747E",
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginVertical: 5,
+    height: 45,
   },
-  modalItem: {
+
+  textWrapper: {
+    alignItems: "center",
+  },
+
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.3)",
+  },
+
+  sheetContainer: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+  },
+
+  sheet: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    alignItems: "center",
+    marginBottom: 15,
   },
-  modalItemText: {
-    fontSize: 18,
-    flexShrink: 1,
-    marginRight: 10,
-  },
-  items: { alignItems: "flex-end", paddingRight: 18, paddingTop: 25 },
-});
 
-export default CustomPicker;
+  headerText: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+
+  item: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+});

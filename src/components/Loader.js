@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, View, Modal } from "react-native";
 import { SkypeIndicator } from "react-native-indicators";
+import { Colors } from "../utils/Colors";
 
 const Loader = (props) => {
   const { loading, modalStyle, indicatorStyle } = props;
@@ -15,7 +16,7 @@ const Loader = (props) => {
     >
       <View style={[styles.modalBackground, modalStyle]}>
         <View style={[styles.activityIndicatorWrapper, indicatorStyle]}>
-          <SkypeIndicator color="#d5a203" size={60} />
+          <SkypeIndicator color={Colors.primary} size={60} />
         </View>
       </View>
     </Modal>
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "center",
     backgroundColor: "#00000080",
-    zIndex: 1000
+    zIndex: 1000,
   },
   activityIndicatorWrapper: {
     height: 100,

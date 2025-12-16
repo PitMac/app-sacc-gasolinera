@@ -1,21 +1,30 @@
-import { View, Text, StyleSheet, Alert, Modal, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  Modal,
+  Pressable,
+  FlatList,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { windowWidth } from "../utils/Dimensions";
-import CustomButton from "../components/CustomButton";
 import useAuthStore from "../stores/AuthStore";
 import { getToken, mergeStorage } from "../utils/Utils";
 import instance from "../utils/Instance";
 import Loader from "../components/Loader";
 import CustomAppBar from "../components/CustomAppBar";
 import CustomCheckBox from "../components/CustomCheckBox";
-import { sharedStyles } from "../styles/SharedStyles";
-import useThemeStore from "../stores/ThemeStore";
 import {
   useSafeAreaInsets,
   SafeAreaView,
 } from "react-native-safe-area-context";
+import { showAlert } from "../components/CustomAlert";
+import GlobalIcon from "../components/GlobalIcon";
+import { Colors } from "../utils/Colors";
+import { Button } from "react-native-paper";
+import CustomModalContainer from "../components/CustomModalContainer";
 
 export default function ConfigurationScreen() {
   const insets = useSafeAreaInsets();
@@ -80,16 +89,17 @@ export default function ConfigurationScreen() {
     if (idPeriodoSelect !== respIdPeriodoSelect) {
       setModalPeriodo(false);
       mergeStorage({ periodofiscal_id: idPeriodoSelect }, "configuration");
-      Alert.alert(
-        "INFORMACIÓN",
-        "Se ha cambiado el periodo satisfactoriamente, a continuacion se cerrara sesion para actualizar sus configuraciones",
-        [
+      showAlert({
+        title: "INFORMACIÓN",
+        message:
+          "Se ha cambiado el periodo satisfactoriamente, a continuacion se cerrara sesion para actualizar sus configuraciones",
+        actions: [
           {
-            text: "Ok",
+            label: "Ok",
             onPress: () => logout(),
           },
-        ]
-      );
+        ],
+      });
     } else {
       setModalPeriodo(false);
     }
@@ -97,25 +107,24 @@ export default function ConfigurationScreen() {
 
   const saveSelectedEstaciones = () => {
     if (selectedEstaciones.length === 0) {
-      Alert.alert("INFORMACIÓN", "Debe seleccionar al menos una estacion", [
-        {
-          text: "Ok",
-        },
-      ]);
+      showAlert({
+        title: "INFORMACIÓN",
+        message: "Debe seleccionar al menos una estacion",
+      });
       return;
     }
     setModalEstaciones(false);
     mergeStorage({ listEstaciones: selectedEstaciones }, "configuration");
-    Alert.alert(
-      "INFORMACIÓN",
-      "Se han guardado las Estaciones satisfactoriamente",
-      [
+    showAlert({
+      title: "INFORMACIÓN",
+      message: "Se han guardado las Estaciones satisfactoriamente",
+      actions: [
         {
-          text: "Ok",
+          label: "Ok",
           onPress: () => navigation.navigate("Home"),
         },
-      ]
-    );
+      ],
+    });
   };
 
   const refreshParametrizacionApp = async (periodoFiscal) => {
@@ -165,74 +174,91 @@ export default function ConfigurationScreen() {
 
           setdatosEstaciones(data);
         } else {
-          Alert.alert(
-            "Información",
-            "Hubo un problema al consultar la configuración opcional del usuario en el servidor"
-          );
+          showAlert({
+            title: "Información",
+            message:
+              "Hubo un problema al consultar la configuración opcional del usuario en el servidor",
+          });
         }
       } catch (error) {
-        Alert.alert(
-          "Alerta",
-          "Hubo un problema al consultar la configuración opcional del usuario en el servidor"
-        );
+        showAlert({
+          title: "Alerta",
+          message:
+            "Hubo un problema al consultar la configuración opcional del usuario en el servidor",
+        });
       } finally {
         setIsLoading(false);
       }
     } else {
-      Alert.alert(
-        "Información",
-        "Debe Seleccionar un periodo fiscal para poder recargar la configuración"
-      );
+      showAlert({
+        title: "Información",
+        message:
+          "Debe Seleccionar un periodo fiscal para poder recargar la configuración",
+      });
     }
   };
+
+  const opciones = [
+    {
+      icon: { family: "ion", name: "refresh" },
+      text: "Recargar Parametrizacion",
+      noArrow: true,
+      onPress: () => refreshParametrizacionApp(respIdPeriodoSelect),
+    },
+    {
+      icon: { family: "fa5", name: "building" },
+      text: "Definir Periodo",
+      onPress: () => setModalPeriodo(true),
+    },
+    {
+      icon: { family: "material", name: "apartment" },
+      text: "Configurar Estaciones",
+      onPress: () => setModalEstaciones(true),
+    },
+    {
+      icon: { family: "ion", name: "log-out" },
+      text: "Cerrar sesión",
+      onPress: () => logout(),
+      noArrow: true,
+      destructive: true,
+    },
+  ];
 
   const renderModalPeriodo = () => {
     return (
       <>
-        <CustomAppBar
-          rightIcon="close"
-          center={true}
-          bold={true}
-          onRightPress={() => {
-            setModalPeriodo(false);
-          }}
-          title={"PERIODO ACTIVO"}
-        />
-        <View style={[styles.contentModal, { paddingBottom: insets.bottom }]}>
-          <SafeAreaView style={{ flex: 1 }}>
-            {Object.keys(groupedData).map((key) => {
-              return (
-                <View key={key} style={{ paddingTop: 10 }}>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      color: "#e6b31e",
-                      fontSize: 15,
-                    }}
-                  >
-                    &bull; {key}
-                  </Text>
-                  <View>
-                    {groupedData[key].map((item, index) => {
-                      return (
-                        <CustomCheckBox
-                          key={index}
-                          checked={item.id === idPeriodoSelect}
-                          onPress={() => setIdPeriodoSelect(item.id)}
-                          title={item.nombre}
-                        />
-                      );
-                    })}
-                  </View>
+        <View>
+          {Object.keys(groupedData).map((key) => {
+            return (
+              <View key={key} style={styles.sectionBox}>
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    color: Colors.primary,
+                    fontSize: 15,
+                  }}
+                >
+                  &bull; {key}
+                </Text>
+                <View>
+                  {groupedData[key].map((item, index) => {
+                    return (
+                      <CustomCheckBox
+                        key={index}
+                        checked={item.id === idPeriodoSelect}
+                        onPress={() => setIdPeriodoSelect(item.id)}
+                        title={item.nombre}
+                      />
+                    );
+                  })}
                 </View>
-              );
-            })}
-          </SafeAreaView>
+              </View>
+            );
+          })}
           <View>
-            <CustomButton
-              label={"Guardar Periodo"}
-              onPress={() => saveSelectedPeriodo()}
-            />
+            <Button mode="contained" onPress={() => saveSelectedPeriodo()}>
+              Guardar Periodo
+            </Button>
           </View>
         </View>
       </>
@@ -242,58 +268,105 @@ export default function ConfigurationScreen() {
   const renderModalEstacion = () => {
     return (
       <>
-        <CustomAppBar
-          rightIcon="close"
-          center={true}
-          bold={true}
-          onRightPress={() => {
-            setModalEstaciones(false);
-          }}
-          title={"Configuracion de Estaciones"}
-        />
-        <View style={[styles.contentModal, { paddingBottom: insets.bottom }]}>
-          <SafeAreaView style={{ flex: 1 }}>
-            {datosEstaciones.map((surtidor, index) => {
-              const isSelected = selectedEstaciones.includes(surtidor.id);
-              return (
-                <CustomCheckBox
-                  key={index}
-                  checked={isSelected}
-                  onPress={() => toggleSurtidorSelection(surtidor.id)}
-                  title={surtidor.nombre}
-                />
-              );
-            })}
-          </SafeAreaView>
-          <View>
-            <CustomButton
-              label={"Guardar Estaciones"}
-              onPress={() => saveSelectedEstaciones()}
-            />
-          </View>
+        <View style={styles.sectionBox}>
+          {datosEstaciones.map((surtidor, index) => {
+            const isSelected = selectedEstaciones.includes(surtidor.id);
+            return (
+              <CustomCheckBox
+                key={index}
+                checked={isSelected}
+                onPress={() => toggleSurtidorSelection(surtidor.id)}
+                title={surtidor.nombre}
+              />
+            );
+          })}
+        </View>
+        <View>
+          <Button mode="contained" onPress={() => saveSelectedEstaciones()}>
+            Guardar Estaciones
+          </Button>
         </View>
       </>
     );
   };
 
+  const renderItem = ({ item, index }) => {
+    const isFirst = index === 0;
+    const isLast = index === opciones.length - 1;
+    return (
+      <Pressable
+        onPress={() => item.onPress()}
+        style={({ pressed }) => ({
+          backgroundColor: "white",
+          borderTopLeftRadius: isFirst ? 18 : 0,
+          borderTopRightRadius: isFirst ? 18 : 0,
+          borderBottomLeftRadius: isLast ? 18 : 0,
+          borderBottomRightRadius: isLast ? 18 : 0,
+          paddingVertical: 16,
+          paddingHorizontal: 12,
+          flexDirection: "row",
+          alignItems: "center",
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        })}
+      >
+        <View
+          style={{
+            width: 40,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <GlobalIcon
+            family={item.icon.family}
+            name={item.icon.name}
+            size={25}
+            color={item.destructive ? "#F44336" : Colors.primary}
+          />
+        </View>
+        <View style={{ flex: 1, paddingHorizontal: 8 }}>
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: "500",
+              color: item.destructive ? "#F44336" : "#000",
+            }}
+          >
+            {item.text}
+          </Text>
+        </View>
+        <View
+          style={{
+            width: 40,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {!item.noArrow && (
+            <GlobalIcon family="material" name="chevron-right" size={28} />
+          )}
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={{ flex: 1 }}>
-      <Modal
-        animationType={"slide"}
-        navigationBarTranslucent={true}
-        statusBarTranslucent={true}
+      <CustomModalContainer
         visible={modalPeriodo}
+        title={"Periodo Activo"}
+        onClose={() => setModalPeriodo(false)}
       >
         {renderModalPeriodo()}
-      </Modal>
-      <Modal
-        animationType={"slide"}
-        navigationBarTranslucent={true}
-        statusBarTranslucent={true}
+      </CustomModalContainer>
+
+      <CustomModalContainer
         visible={modalEstaciones}
+        title={"Configuracion de Estaciones"}
+        onClose={() => setModalEstaciones(false)}
       >
         {renderModalEstacion()}
-      </Modal>
+      </CustomModalContainer>
+
       <CustomAppBar
         leftIcon="menu"
         onLeftPress={() => navigation.openDrawer()}
@@ -304,84 +377,25 @@ export default function ConfigurationScreen() {
         title={"Configuracion"}
       />
       <Loader loading={isloading} />
-      <View style={{ alignItems: "center" }}>
-        <View style={styles.buttonContainer}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.box,
-              pressed && sharedStyles.pressed,
-            ]}
-            onPress={() => setModalPeriodo(true)}
-          >
-            <FontAwesome name="building" color="#e6b31e" size={50} />
-            <Text style={styles.buttonText}>Definir Periodo</Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.box,
-              pressed && sharedStyles.pressed,
-            ]}
-            onPress={() => refreshParametrizacionApp(respIdPeriodoSelect)}
-          >
-            <FontAwesome name="refresh" color="#e6b31e" size={50} />
-            <Text style={styles.buttonText}>Recargar Parametrizacion</Text>
-          </Pressable>
-        </View>
-      </View>
-      <View style={{ alignItems: "center" }}>
-        <View style={styles.buttonContainer}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.box,
-              pressed && sharedStyles.pressed,
-            ]}
-            onPress={() => setModalEstaciones(true)}
-          >
-            <FontAwesome name="cogs" color="#e6b31e" size={50} />
-            <Text style={styles.buttonText}>Configurar Estaciones</Text>
-          </Pressable>
-        </View>
-      </View>
+      <FlatList
+        data={opciones}
+        contentContainerStyle={{ padding: 10, flexGrow: 1 }}
+        keyExtractor={(_, index) => index.toString()}
+        renderItem={renderItem}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    width: windowWidth - 25,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingTop: 20,
-  },
   contentModal: {
     flex: 1,
     backgroundColor: "white",
     padding: 20,
   },
-  box: {
-    height: 125,
-    width: 140,
-    borderRadius: 20,
+  sectionBox: {
+    marginBottom: 30,
+    borderRadius: 18,
     backgroundColor: "white",
-    elevation: 5,
-    shadowColor: "#000000",
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  buttonText: {
-    color: "#e6b31e",
-    fontWeight: "bold",
-    paddingTop: 10,
-    fontSize: 13,
-    textAlign: "center", // Centrar el texto horizontalmente
   },
 });

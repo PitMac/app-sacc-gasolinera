@@ -1,7 +1,8 @@
 import React from "react";
 import { Text, Pressable, StyleSheet } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import { sharedStyles } from "../styles/SharedStyles";
+import GlobalIcon from "./GlobalIcon";
+import { Colors } from "../utils/Colors";
 
 const CustomCheckBox = (props) => {
   const { checked, onPress, title } = props;
@@ -9,18 +10,19 @@ const CustomCheckBox = (props) => {
     <Pressable
       style={({ pressed }) => [
         styles.button,
-        pressed && sharedStyles.pressed
+        {
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
       ]}
       onPress={onPress}
     >
-      <Ionicons
+      <GlobalIcon
+        family="ion"
         name={checked ? "checkbox" : "square-outline"}
         size={24}
-        color={checked ? "#d5a203" : "#757575"}
+        color={checked ? Colors.primary : "#757575"}
       />
-      <Text style={{ paddingLeft: 5, fontWeight: "bold" }}>
-        {title}
-      </Text>
+      <Text style={{ paddingLeft: 5, fontWeight: "bold" }}>{title}</Text>
     </Pressable>
   );
 };
@@ -30,7 +32,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     flexDirection: "row",
     alignItems: "center",
-  }
+  },
 });
 
 export default CustomCheckBox;

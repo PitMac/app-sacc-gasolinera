@@ -1,18 +1,32 @@
 import { View, Text, StyleSheet, Alert } from "react-native";
 import React, { useState } from "react";
 import CustomAppBar from "./CustomAppBar";
-import { TextInput } from "react-native-paper";
-import CustomButton from "./CustomButton";
+import { Button, TextInput } from "react-native-paper";
 import { currentDate } from "../utils/Utils";
 import instance from "../utils/Instance";
+import { showAlert } from "./CustomAlert";
 
 export default function DepositoModalComponent(props) {
-  const { setSearchDepositoModal, actionButtons, establecimientoid, periodofiscal_id, cajaId, usuario, turnoActivo, menuId, token } = props;
+  const {
+    setSearchDepositoModal,
+    actionButtons,
+    establecimientoid,
+    periodofiscal_id,
+    cajaId,
+    usuario,
+    turnoActivo,
+    menuId,
+    token,
+  } = props;
   const [valorDeposito, setValorDeposito] = useState("0");
   const [comentariodeposito, setComentariodeposito] = useState("");
 
   const saveDeposito = async () => {
-    if (valorDeposito !== "" && !isNaN(parseFloat(valorDeposito)) && parseFloat(valorDeposito) > 0) {
+    if (
+      valorDeposito !== "" &&
+      !isNaN(parseFloat(valorDeposito)) &&
+      parseFloat(valorDeposito) > 0
+    ) {
       actionButtons.setIsLoading(true);
       const dataComprobante = {
         tipo_documento: "EGR",
@@ -28,7 +42,7 @@ export default function DepositoModalComponent(props) {
         menu_id: menuId,
         isMobile: true,
         isla_id: turnoActivo?.isla_id ?? 0,
-        asignacionturnoapoyo_id: turnoActivo?.asignacionturnoapoyo_id ?? 0
+        asignacionturnoapoyo_id: turnoActivo?.asignacionturnoapoyo_id ?? 0,
       };
       const config = {
         headers: {
@@ -40,35 +54,22 @@ export default function DepositoModalComponent(props) {
         .post(
           "api/v1/facturacion/comprobante/ingresoegreso",
           dataComprobante,
-          config,
+          config
         )
         .then((resp) => {
           actionButtons.printerDeposito(resp.data.id);
         })
-        .catch((err) => {
-        });
+        .catch((err) => {});
     } else {
-      Alert.alert(
-        "Información",
-        "Debe ingresar un valor de deposito valido",
-        [{ text: "OK" }],
-      );
+      showAlert({
+        title: "Información",
+        message: "Debe ingresar un valor de deposito valido",
+      });
     }
   };
 
   return (
     <View>
-      <CustomAppBar
-        center={true}
-        bold={true}
-        rightIcon="close"
-        onRightPress={() => {
-          setComentariodeposito("");
-          setValorDeposito("0");
-          setSearchDepositoModal(false);
-        }}
-        title={"DEPOSITO"}
-      />
       <View style={{ paddingHorizontal: 20 }}>
         <View style={{ alignItems: "center" }}>
           <Text>Ingrese el valor a depositar:</Text>
@@ -96,7 +97,7 @@ export default function DepositoModalComponent(props) {
           <TextInput
             style={{
               width: "80%",
-              paddingVertical: 20,
+              paddingVertical: 10,
               marginTop: 10,
             }}
             mode={"outlined"}
@@ -114,11 +115,9 @@ export default function DepositoModalComponent(props) {
             justifyContent: "center",
           }}
         >
-          <CustomButton
-            style={{ width: "70%" }}
-            label={"Guardar Deposito"}
-            onPress={saveDeposito}
-          />
+          <Button mode="contained" onPress={saveDeposito}>
+            Guardar Deposito
+          </Button>
         </View>
       </View>
     </View>

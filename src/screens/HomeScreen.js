@@ -18,13 +18,12 @@ import {
   useIsFocused,
   useNavigation,
 } from "@react-navigation/native";
-import { Portal } from "react-native-paper";
+import { Button, Portal } from "react-native-paper";
 import instance from "../utils/Instance";
 import Loader from "../components/Loader";
 import DispensadorSVG from "../../assets/images/misc/dispensador.svg";
 import DispensandoSVG from "../../assets/images/misc/dispensando.svg";
 import PagandoSVG from "../../assets/images/misc/pagando.svg";
-import CustomButton from "../components/CustomButton";
 import HabilitarTurno from "./HabilitarTurno";
 import useAuthStore from "../stores/AuthStore";
 import { useDeviceOrientation } from "@react-native-community/hooks";
@@ -44,6 +43,9 @@ import ListClientesByPlacaComponent from "../components/ListClientesByPlacaCompo
 import { useDrawerStatus } from "@react-navigation/drawer";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { sharedStyles } from "../styles/SharedStyles";
+import { showAlert } from "../components/CustomAlert";
+import { Colors } from "../utils/Colors";
+import CustomModalContainer from "../components/CustomModalContainer";
 
 export default function HomeScreen() {
   const isDesarrollo = false;
@@ -481,7 +483,10 @@ export default function HomeScreen() {
       })
       .catch((err) => {
         setIsLoading(false);
-        Alert.alert("Error", "Hubo un error");
+        showAlert({
+          title: "Error",
+          message: "Hubo un error",
+        });
       });
   };
 
@@ -586,10 +591,10 @@ export default function HomeScreen() {
       const ahora = new Date();
 
       if (ahora > horaFin) {
-        Alert.alert(
-          "El Tiempo del Turno acabó",
-          "Si no ha cerrado turno, puede hacerlo desde el Sistema Web"
-        );
+        showAlert({
+          title: "El Tiempo del Turno acabó",
+          message: "Si no ha cerrado turno, puede hacerlo desde el Sistema Web",
+        });
         logout();
       }
     }
@@ -666,27 +671,32 @@ export default function HomeScreen() {
     setTipoPago(filteredTipoPago);
     if (localstorage.periodofiscal_id !== undefined) {
       if (estacionesLocalStorage === undefined) {
-        Alert.alert("INFORMACIÓN", "Debe escoger las Estaciones", [
-          {
-            text: "Ok",
-            onPress: () => navigation.navigate("Configuration"),
-          },
-        ]);
+        showAlert({
+          title: "INFORMACIÓN",
+          message: "Debe escoger las Estaciones",
+          actions: [
+            {
+              label: "Ok",
+              onPress: () => navigation.navigate("Configuration"),
+            },
+          ],
+        });
         return;
       }
       setPeriodofiscal_id(localstorage.periodofiscal_id);
     } else {
       setIsLoading(false);
-      Alert.alert(
-        "INFORMACIÓN",
-        "Estimado usuario, debe asignar un contribuyente en el dispositivo para poder continuar con el uso de la APP",
-        [
+      showAlert({
+        title: "INFORMACIÓN",
+        message:
+          "Estimado usuario, debe asignar un contribuyente en el dispositivo para poder continuar con el uso de la APP",
+        actions: [
           {
-            text: "Ok",
+            label: "Ok",
             onPress: () => navigation.navigate("Configuration"),
           },
-        ]
-      );
+        ],
+      });
     }
   };
 
@@ -707,10 +717,11 @@ export default function HomeScreen() {
     if (arrValidacion.length == 0) {
       setIsOpenCierreTurno(true);
     } else {
-      Alert.alert(
-        "Informacion!",
-        "Dispensadores sin facturar, verifique que todos los dispensadores esten liberados!"
-      );
+      showAlert({
+        title: "Informacion!",
+        message:
+          "Dispensadores sin facturar, verifique que todos los dispensadores esten liberados!",
+      });
     }
   };
 
@@ -726,7 +737,10 @@ export default function HomeScreen() {
         setDataResumen(res.data.items);
       }
     } catch (err) {
-      Alert.alert("Información", "Error");
+      showAlert({
+        title: "Información",
+        message: "Error",
+      });
     }
   };
 
@@ -857,10 +871,10 @@ export default function HomeScreen() {
         setFacturasAnticipadas(arrAnticipos);
       }
     } else {
-      Alert.alert(
-        "Información",
-        "Debe cargar un cliente para poder seleccionar la boquilla"
-      );
+      showAlert({
+        title: "Información",
+        message: "Debe cargar un cliente para poder seleccionar la boquilla",
+      });
     }
   };
 
@@ -905,10 +919,16 @@ export default function HomeScreen() {
           ToastAndroid.show("Se imprimió correctamente", ToastAndroid.SHORT);
         })
         .catch((error) => {
-          Alert.alert("Error", `Error al imprimir: ${error.message}`);
+          showAlert({
+            title: "Error",
+            message: `Error al imprimir: ${error.message}`,
+          });
         });
     } else {
-      Alert.alert("Error", "No hay url para impresion configurada");
+      showAlert({
+        title: "Error",
+        message: "No hay url para impresion configurada",
+      });
     }
   };
 
@@ -984,10 +1004,11 @@ export default function HomeScreen() {
       searchPlaca(true, null, true);
     } else {
       setIsLoading(false);
-      Alert.alert(
-        "Información",
-        "Debe seleccionar un tipo de combustible para habilitar el dispensador"
-      );
+      showAlert({
+        title: "Información",
+        message:
+          "Debe seleccionar un tipo de combustible para habilitar el dispensador",
+      });
     }
   };
 
@@ -1037,10 +1058,11 @@ export default function HomeScreen() {
           if (dataProforma.turno) {
             const estadoTurno = dataProforma.turno?.estado_turno;
             if (estadoTurno === "C") {
-              Alert.alert(
-                "El turno ya está cerrado",
-                "El turno ha cerrado, se va a cerrar sesión para que inicie con el nuevo turno"
-              );
+              showAlert({
+                title: "El turno ya está cerrado",
+                message:
+                  "El turno ha cerrado, se va a cerrar sesión para que inicie con el nuevo turno",
+              });
               logout();
               return;
             }
@@ -1183,14 +1205,18 @@ export default function HomeScreen() {
           setIsLoading(false);
         } else {
           setIsLoading(false);
-          Alert.alert(
-            "Información",
-            "Hubo un problema al consultar la proforma del surtidor, intente nuevamente!"
-          );
+          showAlert({
+            title: "Información",
+            message:
+              "Hubo un problema al consultar la proforma del surtidor, intente nuevamente!",
+          });
         }
       } catch (error) {
         setIsLoading(false);
-        Alert.alert("Error", "Error al consultar la proforma del surtidor.");
+        showAlert({
+          title: "Error",
+          message: "Error al consultar la proforma del surtidor.",
+        });
       }
     }
   };
@@ -1327,10 +1353,10 @@ export default function HomeScreen() {
           openModalAddCustomer();
         });
     } else {
-      Alert.alert(
-        "Información",
-        "Estimado usuario debe ingresar un numero de identificacion"
-      );
+      showAlert({
+        title: "Información",
+        message: "Estimado usuario debe ingresar un numero de identificacion",
+      });
     }
   }
 
@@ -1403,11 +1429,12 @@ export default function HomeScreen() {
                       parseFloat(objFacturaAnticipada.total)
                     ) {
                       setIsLoading(false);
-                      Alert.alert(
-                        "Información",
-                        "Estimado usuario, El valor de dolares ingresado supera al valor del saldo disponible, saldo disponible: $" +
-                          objFacturaAnticipada.total
-                      );
+                      showAlert({
+                        title: "Información",
+                        message:
+                          "Estimado usuario, El valor de dolares ingresado supera al valor del saldo disponible, saldo disponible: $" +
+                          objFacturaAnticipada.total,
+                      });
                       return;
                     }
                   } else {
@@ -1424,37 +1451,41 @@ export default function HomeScreen() {
                         parseFloat(objFacturaAnticipada.total)
                       ) {
                         setIsLoading(false);
-                        Alert.alert(
-                          "Información",
-                          "Estimado usuario, El galonaje ingresado supera al valor del saldo disponible, saldo disponible: $" +
-                            objFacturaAnticipada.total
-                        );
+                        showAlert({
+                          title: "Información",
+                          message:
+                            "Estimado usuario, El galonaje ingresado supera al valor del saldo disponible, saldo disponible: $" +
+                            objFacturaAnticipada.total,
+                        });
                         return;
                       }
                     } else {
                       setIsLoading(false);
-                      Alert.alert(
-                        "Información",
-                        "Estimado usuario, No se pudo encontrar la boquilla para calcular el precio con los galones"
-                      );
+                      showAlert({
+                        title: "Información",
+                        message:
+                          "Estimado usuario, No se pudo encontrar la boquilla para calcular el precio con los galones",
+                      });
                       return;
                     }
                   }
                 }
               } else {
                 setIsLoading(false);
-                Alert.alert(
-                  "Información",
-                  "Estimado usuario, El cliente no posee cupo disponible para dispensar, por favor verifique"
-                );
+                showAlert({
+                  title: "Información",
+                  message:
+                    "Estimado usuario, El cliente no posee cupo disponible para dispensar, por favor verifique",
+                });
                 return;
               }
             } else {
               setIsLoading(false);
-              Alert.alert(
-                "Información",
-                "Estimado usuario, debe seleccionar un Anticipo para poder despachar"
-              );
+              showAlert({
+                title: "Información",
+                message:
+                  "Estimado usuario, debe seleccionar un Anticipo para poder despachar",
+              });
               return;
             }
           } else if (
@@ -1517,10 +1548,11 @@ export default function HomeScreen() {
                     }
                   } else {
                     setIsLoading(false);
-                    Alert.alert(
-                      "Información",
-                      "Estimado usuario, No se pudo encontrar la boquilla para calcular el precio con los galones"
-                    );
+                    showAlert({
+                      title: "Información",
+                      message:
+                        "Estimado usuario, No se pudo encontrar la boquilla para calcular el precio con los galones",
+                    });
                     return;
                   }
                 }
@@ -1769,44 +1801,50 @@ export default function HomeScreen() {
                   setModalVisible(false);
                   setRefreshData(!refreshData);
                 } else {
-                  Alert.alert("Error", "Error en la consulta: " + messageError);
+                  showAlert({
+                    title: "Error",
+                    message: "Error en la consulta: " + messageError,
+                  });
                 }
               });
           } else {
             setIsLoading(false);
             if (status) {
-              Alert.alert(
-                "Información",
-                "Perdida de conexion del surtidor con el dispositivo!"
-              );
+              showAlert({
+                title: "Información",
+                message: "Perdida de conexion del surtidor con el dispositivo!",
+              });
             }
             return;
           }
         } else {
           setIsLoading(false);
-          Alert.alert(
-            "Información",
-            "Debe seleccionar un tipo de combustible para habilitar el dispensador"
-          );
+          showAlert({
+            title: "Información",
+            message:
+              "Debe seleccionar un tipo de combustible para habilitar el dispensador",
+          });
         }
       } else {
         setIsLoading(false);
-        Alert.alert(
-          "Información",
-          "Formato de placa invalida, verifique que tenga ingresado un formato valido"
-        );
+        showAlert({
+          title: "Información",
+          message:
+            "Formato de placa invalida, verifique que tenga ingresado un formato valido",
+        });
       }
     } else {
       if (!status) {
-        Alert.alert(
-          "Información",
-          "Debe ingresar una placa valida para poder buscar"
-        );
+        showAlert({
+          title: "Información",
+          message: "Debe ingresar una placa valida para poder buscar",
+        });
       } else {
-        Alert.alert(
-          "Información",
-          "Debe ingresar una placa y tener cargado un cliente para poder buscar"
-        );
+        showAlert({
+          title: "Información",
+          message:
+            "Debe ingresar una placa y tener cargado un cliente para poder buscar",
+        });
       }
     }
   };
@@ -1909,21 +1947,25 @@ export default function HomeScreen() {
             }
           } else {
             setIsLoading(false);
-            Alert.alert(
-              "Información",
-              "Estimado usuario no existen datos relacionados a este número de identificación!"
-            );
+            showAlert({
+              title: "Información",
+              message:
+                "Estimado usuario no existen datos relacionados a este número de identificación!",
+            });
           }
         })
         .catch((err) => {
           setIsLoading(false);
-          Alert.alert("Error");
+          showAlert({
+            title: "Error",
+            message: "Hubo un error",
+          });
         });
     } else {
-      Alert.alert(
-        "Información",
-        "Estimado usuario debe ingresar un numero de identificacion"
-      );
+      showAlert({
+        title: "Información",
+        message: "Estimado usuario debe ingresar un numero de identificacion",
+      });
     }
   }
 
@@ -1975,10 +2017,11 @@ export default function HomeScreen() {
       }));
       setEditData(!isEditData);
     } else {
-      Alert.alert(
-        "Información",
-        "Estimado usuario debe seleccionar un surtidor para cargar los datos"
-      );
+      showAlert({
+        title: "Información",
+        message:
+          "Estimado usuario debe seleccionar un surtidor para cargar los datos",
+      });
     }
   };
 
@@ -2134,7 +2177,10 @@ export default function HomeScreen() {
           })
           .catch((err) => {
             setIsLoading(false);
-            Alert.alert("Error", "Hubo un error");
+            showAlert({
+              title: "Error",
+              message: "Hubo un error",
+            });
           });
       }
     }
@@ -2167,7 +2213,10 @@ export default function HomeScreen() {
         })
         .catch((err) => {
           setIsLoading(false);
-          Alert.alert("Error", "Hubo un error");
+          showAlert({
+            title: "Error",
+            message: "Hubo un error",
+          });
         });
     }
   };
@@ -2241,21 +2290,28 @@ export default function HomeScreen() {
               printEgreso(resp.data.id);
               setRefreshData(!refreshData);
             } else {
-              Alert.alert("Información", "El egreso no pudo ser generado");
+              showAlert({
+                title: "Información",
+                message: "El egreso no pudo ser generado",
+              });
             }
           }
         })
         .catch((err) => {
           setIsLoading(false);
-          Alert.alert("Error", "Hubo un error");
+          showAlert({
+            title: "Error",
+            message: "Hubo un error",
+          });
         });
       setIsLoading(false);
     } else {
       setIsLoading(false);
-      Alert.alert(
-        "Información",
-        "Estimado usuario debe ingresar una cantidad mayor a 0 parea guardar la venta"
-      );
+      showAlert({
+        title: "Información",
+        message:
+          "Estimado usuario debe ingresar una cantidad mayor a 0 parea guardar la venta",
+      });
     }
   };
 
@@ -2288,17 +2344,19 @@ export default function HomeScreen() {
         }
       } else {
         setIsLoading(false);
-        Alert.alert(
-          "Información",
-          "Estimado usuario, no se encontro dispensador enlazado disponible para guardar el egreso"
-        );
+        showAlert({
+          title: "Información",
+          message:
+            "Estimado usuario, no se encontro dispensador enlazado disponible para guardar el egreso",
+        });
       }
     } else {
       setIsLoading(false);
-      Alert.alert(
-        "Información",
-        "Estimado usuario, el dispensador no ha terminado de despachar, verifique que la manguera este colgada"
-      );
+      showAlert({
+        title: "Información",
+        message:
+          "Estimado usuario, el dispensador no ha terminado de despachar, verifique que la manguera este colgada",
+      });
     }
   };
 
@@ -2336,19 +2394,21 @@ export default function HomeScreen() {
             setValores({ dolares: 0, galones: 0, estado_transactor: "" });
             resetData();
             setRefreshData(!refreshData);
-            Alert.alert(
-              "Información",
-              "Estimado usuario, no se ha encontrado un formato de impresión para esta ventana, por favor contacte con el proveedor del sistema!"
-            );
+            showAlert({
+              title: "Información",
+              message:
+                "Estimado usuario, no se ha encontrado un formato de impresión para esta ventana, por favor contacte con el proveedor del sistema!",
+            });
           }
         }
         setIsLoading(false);
       })
       .catch((error) => {
-        Alert.alert(
-          "Información",
-          "Hubo un problema al obtener los datos del registro para la impresion!"
-        );
+        showAlert({
+          title: "Información",
+          message:
+            "Hubo un problema al obtener los datos del registro para la impresion!",
+        });
         setIsLoading(false);
       });
   };
@@ -2385,19 +2445,20 @@ export default function HomeScreen() {
           if (resp.data.item !== "") {
             print(resp.data.item);
           } else {
-            Alert.alert(
-              "Información",
-              "Estimado usuario, no se ha encontrado un formato de impresión para esta ventana, por favor contacte con el proveedor del sistema!"
-            );
+            showAlert({
+              title: "Información",
+              message:
+                "Estimado usuario, no se ha encontrado un formato de impresión para esta ventana, por favor contacte con el proveedor del sistema!",
+            });
           }
         }
         setIsLoading(false);
       })
       .catch((error) => {
-        Alert.alert(
-          "Información",
-          "Hubo un problema al obtener los datos del registro!"
-        );
+        showAlert({
+          title: "Información",
+          message: "Hubo un problema al obtener los datos del registro!",
+        });
         setIsLoading(false);
       });
   };
@@ -2448,7 +2509,10 @@ export default function HomeScreen() {
       })
       .catch((err) => {
         setIsLoading(false);
-        Alert.alert("Error");
+        showAlert({
+          title: "Error",
+          message: "Hubo un error",
+        });
       });
   };
 
@@ -2483,24 +2547,27 @@ export default function HomeScreen() {
           }
         } else {
           setIsLoading(false);
-          Alert.alert(
-            "Información",
-            "Estimado usuario, no se encontro dispensador enlazado disponible para facturar"
-          );
+          showAlert({
+            title: "Información",
+            message:
+              "Estimado usuario, no se encontro dispensador enlazado disponible para facturar",
+          });
         }
       } else {
         setIsLoading(false);
-        Alert.alert(
-          "Información",
-          "Estimado usuario, el dispensador no ha terminado de despachar, verifique que la manguera este colgada"
-        );
+        showAlert({
+          title: "Información",
+          message:
+            "Estimado usuario, el dispensador no ha terminado de despachar, verifique que la manguera este colgada",
+        });
       }
     } else {
       setIsLoading(false);
-      Alert.alert(
-        "Información",
-        "Formato de placa invalida, verifique que tenga ingresado un formato valido"
-      );
+      showAlert({
+        title: "Información",
+        message:
+          "Formato de placa invalida, verifique que tenga ingresado un formato valido",
+      });
     }
   };
 
@@ -2555,19 +2622,21 @@ export default function HomeScreen() {
             setValores({ dolares: 0, galones: 0, estado_transactor: "" });
             resetData();
             setRefreshData(!refreshData);
-            Alert.alert(
-              "Información",
-              "Estimado usuario, no se ha encontrado un formato de impresión para esta ventana, por favor contacte con el proveedor del sistema!"
-            );
+            showAlert({
+              title: "Información",
+              message:
+                "Estimado usuario, no se ha encontrado un formato de impresión para esta ventana, por favor contacte con el proveedor del sistema!",
+            });
           }
         }
         setIsLoading(false);
       })
       .catch((error) => {
-        Alert.alert(
-          "Información",
-          "Hubo un problema al obtener los datos del registro para la impresion!"
-        );
+        showAlert({
+          title: "Información",
+          message:
+            "Hubo un problema al obtener los datos del registro para la impresion!",
+        });
         setIsLoading(false);
       });
   };
@@ -2647,12 +2716,13 @@ export default function HomeScreen() {
           parseFloat(parametrizacion.valorConsumidorFinal)
         ) {
           setIsLoading(false);
-          Alert.alert(
-            "Información",
-            `Estimado usuario, el valor de la factura no debe ser mayor de $${parseFloat(
+          showAlert({
+            title: "Información",
+            message: `Estimado usuario, el valor de la factura no debe ser mayor de $${parseFloat(
               parametrizacion.valorConsumidorFinal
-            ).toFixedNew(2)} para consumidor final`
-          );
+            ).toFixedNew(2)} para consumidor final`,
+          });
+
           return;
         }
       }
@@ -2663,10 +2733,10 @@ export default function HomeScreen() {
         objHeadBilling.saldoFacturas < parseFloat(valores.dolares)
       ) {
         setIsLoading(false);
-        Alert.alert(
-          "Información",
-          `Estimado usuario, la cantidad es mayor al cupo con el que cuenta el cliente $${objHeadBilling.saldoFacturas}`
-        );
+        showAlert({
+          title: "Información",
+          message: `Estimado usuario, la cantidad es mayor al cupo con el que cuenta el cliente $${objHeadBilling.saldoFacturas}`,
+        });
         return;
       }
 
@@ -2829,7 +2899,10 @@ export default function HomeScreen() {
               toggleModal();
             } else {
               setIsLoading(false);
-              Alert.alert("Información", "La Factura no pudo ser generada");
+              showAlert({
+                title: "Información",
+                message: "La Factura no pudo ser generada",
+              });
             }
           } else if (resp.data.status === 200) {
             setIsLoading(false);
@@ -2846,14 +2919,18 @@ export default function HomeScreen() {
             }
           }
           setIsLoading(false);
-          Alert.alert("Error", "No se puede generar factura: " + messageError);
+          showAlert({
+            title: "Error",
+            message: "No se puede generar factura: " + messageError,
+          });
         });
     } else {
       setIsLoading(false);
-      Alert.alert(
-        "Información",
-        "Estimado usuario debe ingresar una cantidad mayor a 0 parea guardar la venta"
-      );
+      showAlert({
+        title: "Información",
+        message:
+          "Estimado usuario debe ingresar una cantidad mayor a 0 parea guardar la venta",
+      });
     }
   };
 
@@ -3071,6 +3148,13 @@ export default function HomeScreen() {
       >
         {openAddCustomer()}
       </Modal>
+      <CustomModalContainer
+        visible={isOpenModalHabilitarDispensador}
+        title={"HABILITAR DISPENSADOR"}
+        onClose={() => closeModalHabilitarDispensador()}
+      >
+        {renderHabilitarModal()}
+      </CustomModalContainer>
       <Modal
         navigationBarTranslucent={true}
         statusBarTranslucent={true}
@@ -3079,14 +3163,14 @@ export default function HomeScreen() {
       >
         {openTurnoModal()}
       </Modal>
-      <Modal
-        navigationBarTranslucent={true}
-        statusBarTranslucent={true}
-        animationType="slide"
+      <CustomModalContainer
         visible={searchDepositoModal}
+        title={"Deposito"}
+        onClose={() => setSearchDepositoModal(false)}
       >
         {renderDepositoModal()}
-      </Modal>
+      </CustomModalContainer>
+
       <Modal
         navigationBarTranslucent={true}
         statusBarTranslucent={true}
@@ -3142,22 +3226,59 @@ export default function HomeScreen() {
         title={turnoActivo ? turnoActivo.nombre : "No hay turno activo"}
       />
       {!turnoActivo ? (
-        <View style={{ justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ textAlign: "center", fontSize: 20 }}>
-            No hay turnos activos. Consulte con el administrador.
-          </Text>
-          <Image
-            contentFit="contain"
-            style={{ width: "80%", height: "70%" }}
-            source={require("../../assets/images/list_empty.png")}
-          />
+        <View
+          style={{
+            alignItems: "center",
+            marginTop: 20,
+            backgroundColor: "white",
+            padding: 20,
+            marginHorizontal: 10,
+            borderRadius: 12,
+            paddingBottom: 30,
+          }}
+        >
+          <View
+            style={{
+              padding: 20,
+            }}
+          >
+            <Text
+              style={{
+                color: "black",
+                fontWeight: "700",
+                fontSize: 20,
+                textAlign: "center",
+              }}
+            >
+              No hay turnos activos. Consulte con el administrador.
+            </Text>
+          </View>
+          <View
+            style={{
+              height: 300,
+              width: "100%",
+              alignSelf: "center",
+              borderRadius: 12,
+              overflow: "hidden",
+              padding: 20,
+            }}
+          >
+            <Image
+              source={require("../../assets/images/alert.png")}
+              style={{
+                height: "100%",
+                width: "100%",
+              }}
+              resizeMode="contain"
+            />
+          </View>
         </View>
       ) : turnoActivo.estado_turno === "I" ? (
         <ScrollView
           contentContainerStyle={styles.scrollViewContent}
           refreshControl={
             <RefreshControl
-              colors={["#e6b31e"]}
+              colors={[Colors.primary]}
               refreshing={isloading}
               onRefresh={() => {
                 setRefreshData(!refreshData);
@@ -3168,7 +3289,6 @@ export default function HomeScreen() {
           {isFocused && !isDrawerOpen && (
             <Portal>
               <CustomFAB
-                color={"#d5a203"}
                 icon={"duplicate"}
                 onPress={() => {
                   actionSheetRef.current?.show();
@@ -3176,7 +3296,6 @@ export default function HomeScreen() {
               />
 
               <CustomFAB
-                color={"#d5a203"}
                 align="left"
                 icon="print"
                 onPress={() => {
@@ -3196,11 +3315,7 @@ export default function HomeScreen() {
                         .slice(index, index + itemsPerRow)
                         .map((subItem, subIndex) => {
                           return (
-                            <View
-                              key={subIndex}
-                              elevation={5}
-                              style={styles.surface}
-                            >
+                            <View key={subIndex} style={styles.surface}>
                               <Text
                                 style={{ fontWeight: "bold", marginBottom: 5 }}
                               >
@@ -3477,48 +3592,89 @@ export default function HomeScreen() {
       ) : (
         <>
           {turnoActivo.estado_turno === "P" ? (
-            <View style={{ alignItems: "center", marginTop: 20 }}>
-              <Text
+            <View
+              style={{
+                alignItems: "center",
+                marginTop: 20,
+                backgroundColor: "white",
+                padding: 20,
+                marginHorizontal: 10,
+                borderRadius: 12,
+                paddingBottom: 30,
+              }}
+            >
+              <View
                 style={{
-                  textAlign: "center",
-                  fontSize: 20,
-                  fontWeight: "500",
-                  marginBottom: 15,
+                  padding: 20,
                 }}
               >
-                El turno no está habilitado.
-              </Text>
-              <CustomButton
-                label={"Habilitar Turno"}
-                onPress={() => setIsOpenOpenTurno(true)}
-              />
-              <View style={{ height: "60%" }}>
+                <Text
+                  style={{ color: "black", fontWeight: "700", fontSize: 20 }}
+                >
+                  El turno no está habilitado.
+                </Text>
+              </View>
+              <View
+                style={{
+                  height: 300,
+                  width: "100%",
+                  alignSelf: "center",
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  padding: 20,
+                }}
+              >
                 <Image
-                  source={require("../../assets/images/list_empty.png")}
+                  source={require("../../assets/images/habilitar_turno.png")}
                   style={{
                     height: "100%",
+                    width: "100%",
                   }}
                   resizeMode="contain"
                 />
               </View>
+              <Button mode="contained" onPress={() => setIsOpenOpenTurno(true)}>
+                Habilitar Turno
+              </Button>
             </View>
           ) : (
-            <View style={{ alignItems: "center", marginTop: 20 }}>
-              <Text
+            <View
+              style={{
+                alignItems: "center",
+                marginTop: 20,
+                backgroundColor: "white",
+                padding: 20,
+                marginHorizontal: 10,
+                borderRadius: 12,
+                paddingBottom: 30,
+              }}
+            >
+              <View
                 style={{
-                  textAlign: "center",
-                  fontSize: 20,
-                  fontWeight: "500",
-                  marginBottom: 15,
+                  padding: 20,
                 }}
               >
-                El turno ya está cerrado.
-              </Text>
-              <View style={{ height: "60%" }}>
+                <Text
+                  style={{ color: "black", fontWeight: "700", fontSize: 20 }}
+                >
+                  El turno ya está cerrado.
+                </Text>
+              </View>
+              <View
+                style={{
+                  height: 300,
+                  width: "100%",
+                  alignSelf: "center",
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  padding: 20,
+                }}
+              >
                 <Image
-                  source={require("../../assets/images/list_empty.png")}
+                  source={require("../../assets/images/close.png")}
                   style={{
                     height: "100%",
+                    width: "100%",
                   }}
                   resizeMode="contain"
                 />
@@ -3545,11 +3701,12 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   surface: {
     flex: 1,
     margin: 5,
+    marginBottom: 0,
     padding: 10,
     backgroundColor: "white",
     alignItems: "center",

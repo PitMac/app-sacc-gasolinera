@@ -14,11 +14,11 @@ import React, { useEffect, useState } from "react";
 import { getToken } from "../utils/Utils";
 import Loader from "./Loader";
 import instance from "../utils/Instance";
-import { Divider, TextInput } from "react-native-paper";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import CustomPicker from "./CustomPicker";
+import { Divider, SegmentedButtons, TextInput } from "react-native-paper";
 import CustomAppBar from "./CustomAppBar";
 import { sharedStyles } from "../styles/SharedStyles";
+import GlobalIcon from "./GlobalIcon";
+import { Colors } from "../utils/Colors";
 
 export default function SearchCustomer(props) {
   const insets = useSafeAreaInsets();
@@ -38,7 +38,7 @@ export default function SearchCustomer(props) {
   }, [selectedOption]);
 
   const callDataInitial = async () => {
-    setSelectedOption("nombre");
+    setSelectedOption("Nombre");
     const localstorage = await getToken("configuration");
     if (localstorage && "periodofiscal_id" in localstorage) {
       setPeriodofiscal_id(localstorage.periodofiscal_id);
@@ -60,7 +60,7 @@ export default function SearchCustomer(props) {
           ? searchInPath
           : selectedOption + ":" + searchInPath;
       const response = await instance.get(
-        `api/v1/cartera/cliente/search/${periodofiscal_id}/${selectedOption}:${
+        `api/v1/cartera/cliente/search/${periodofiscal_id}/${selectedOption.toLowerCase()}:${
           parameterSearch !== "" ? searchInPath : "&&"
         }`,
         {
@@ -89,21 +89,32 @@ export default function SearchCustomer(props) {
   };
 
   const renderClientes = ({ item, index }) => {
+    const isFirst = index === 0;
+    const isLast = index === clientes.length - 1;
     return (
       <>
         <Pressable
           onPress={() => actionClick(item)}
-          style={({ pressed }) => [
-            styles.clientes,
-            pressed && sharedStyles.pressed,
-          ]}
+          style={({ pressed }) => ({
+            backgroundColor: "white",
+            borderTopLeftRadius: isFirst ? 18 : 5,
+            borderTopRightRadius: isFirst ? 18 : 5,
+            borderBottomLeftRadius: isLast ? 18 : 5,
+            borderBottomRightRadius: isLast ? 18 : 5,
+            marginBottom: 5,
+            paddingVertical: 14,
+            paddingHorizontal: 12,
+            flexDirection: "row",
+            alignItems: "center",
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          })}
         >
-          <View style={{ marginRight: 5 }}>
-            <Ionicons
+          <View style={{ marginHorizontal: 10 }}>
+            <GlobalIcon
+              color={Colors.primary}
+              family="ion"
               name="person-circle-outline"
               size={30}
-              color="#d5a203"
-              style={styles.searchIcon}
             />
           </View>
           <View>
@@ -113,13 +124,14 @@ export default function SearchCustomer(props) {
             <Text>Ruc: {item.numeroidentificacion}</Text>
           </View>
         </Pressable>
-        <Divider />
       </>
     );
   };
 
   return (
-    <View style={[styles.contentModal, { paddingBottom: insets.bottom + 10 }]}>
+    <SafeAreaView
+      style={[styles.contentModal, { paddingBottom: insets.bottom + 10 }]}
+    >
       <CustomAppBar
         center={true}
         rightIcon="close"
@@ -128,93 +140,75 @@ export default function SearchCustomer(props) {
         bold={true}
       />
       <Loader loading={isloading} />
-      <View style={styles.containerBarSearch}>
-        <CustomPicker
-          items={[
-            { label: "Codigo", value: "codigo" },
-            { label: "Nombre", value: "nombre" },
-            { label: "Ruc", value: "ruc" },
-          ]}
-          selectedValue={selectedOption}
-          onValueChange={(value, index) => {
-            handleOptionSelect(value);
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#F2F2F2",
+        }}
+      >
+        <View style={styles.containerBarSearch}>
+          <SegmentedButtons
+            theme={{
+              colors: {
+                outline: "#E0E0E0",
+              },
+            }}
+            style={{
+              marginHorizontal: 25,
+              borderWidth: 0,
+              elevation: 0,
+            }}
+            value={selectedOption}
+            onValueChange={(value, index) => {
+              handleOptionSelect(value);
+            }}
+            buttons={[
+              { label: "Codigo", value: "Codigo" },
+              { label: "Nombre", value: "Nombre" },
+              { label: "Ruc", value: "Ruc" },
+            ]}
+          />
+          <TextInput
+            mode={"outlined"}
+            right={<TextInput.Icon icon="magnify" onPress={searchCustomer} />}
+            returnKeyType="search"
+            style={[sharedStyles.textInput]}
+            label={`Digite el ${selectedOption}...`}
+            placeholderTextColor="#a8a8a8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={searchCustomer}
+            keyboardType={selectedOption === "nombre" ? "text" : "number-pad"}
+          />
+        </View>
+        <SafeAreaView
+          style={{
+            flex: 1,
+            marginTop: 5,
+            paddingHorizontal: 10,
+            backgroundColor: "#F2F2F2",
           }}
-          dropdownIconColor={"#d5a203"}
-          text={selectedOption.toUpperCase()}
-        />
-        <TextInput
-          mode={"outlined"}
-          right={<TextInput.Icon icon="magnify" onPress={searchCustomer} />}
-          returnKeyType="search"
-          style={{ flex: 1, marginLeft: 10 }}
-          placeholder={`Digite el ${selectedOption}...`}
-          placeholderTextColor="#a8a8a8"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSubmitEditing={searchCustomer}
-          keyboardType={selectedOption === "nombre" ? "text" : "number-pad"}
-        />
-        <View style={{ width: 10 }} />
+        >
+          <FlatList
+            keyExtractor={(item, index) => index.toString()}
+            data={clientes}
+            renderItem={renderClientes}
+          />
+        </SafeAreaView>
       </View>
-      <SafeAreaView style={{ flex: 1, marginTop: 10 }}>
-        <FlatList
-          keyExtractor={(item, index) => index.toString()}
-          data={clientes}
-          renderItem={renderClientes}
-        />
-      </SafeAreaView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   containerBarSearch: {
-    marginTop: 20,
-    borderRadius: 20,
-    padding: 5,
-    flexDirection: "row",
-    alignItems: "center",
-    height: 40,
-    marginHorizontal: 5,
-  },
-  dropdownIcon: {
-    marginRight: 5,
-  },
-  dropdown: {
-    position: "absolute",
-    top: 40,
-    left: 20,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    zIndex: 2,
-  },
-  option: {
-    fontSize: 12,
-    color: "#000",
-    paddingVertical: 5,
-  },
-  searchBar: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 5,
-    fontSize: 12,
-    color: "#000",
-    flex: 1,
-  },
-  searchIcon: {
-    marginLeft: 7,
-    paddingTop: 7,
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 10,
+    margin: 10,
   },
   contentModal: {
     flex: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
-  },
-  clientes: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 20,
+    backgroundColor: "white",
   },
 });
