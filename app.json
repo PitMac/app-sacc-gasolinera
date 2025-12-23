@@ -13,7 +13,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+
+      "bundleIdentifier": "com.controlsistemasjl.gasolineraapp"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +23,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.pitmac.appsaccgasolinera"
+      "package": "com.controlsistemasjl.gasolineraapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"

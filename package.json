@@ -7,7 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build": "eas build --platform android --local && mkdir -p builds/apk && mv *.apk builds/apk/"
+    "build": "eas build --platform android --local && mkdir -p builds/apk && mv *.apk builds/apk/",
+    "bundle": "eas build --platform android --local --profile production && mkdir -p builds/aab && mv *.aab builds/aab/"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
