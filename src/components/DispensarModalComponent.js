@@ -150,25 +150,42 @@ function DispensarModalComponent(props) {
               <TextInput
                 style={{ flex: 1 }}
                 label="Placa"
+                editable={
+                  !(
+                    selectedSurtidor?.isFacturaAnticipo ||
+                    (objHeadBilling.cupocredito > 0 &&
+                      !objHeadBilling.permitir_orden_venta &&
+                      selectedSurtidor.proforma)
+                  )
+                }
                 error={error !== ""}
                 maxLength={8}
                 right={
                   <TextInput.Icon
                     icon="magnify"
                     onPress={() => {
-                      handleOnSubmitEditing("placa");
+                      if (
+                        !selectedSurtidor?.isFacturaAnticipo &&
+                        !(
+                          objHeadBilling.cupocredito > 0 &&
+                          !objHeadBilling.permitir_orden_venta &&
+                          selectedSurtidor.proforma
+                        )
+                      ) {
+                        handleOnSubmitEditing("placa");
+                      }
                     }}
                   />
                 }
-                selectTextOnFocus={true}
+                selectTextOnFocus={selectedSurtidor.proforma ? true : false}
                 returnKeyType="search"
                 autoCapitalize="characters"
                 onSubmitEditing={() => handleOnSubmitEditing("placa")}
                 mode={"outlined"}
                 value={objHeadBilling.placa}
-                onBlur={(event) => {
-                  validatePlacaYEstablecimiento();
-                }}
+                onBlur={() =>
+                  validatePlacaYEstablecimiento(objHeadBilling.placa)
+                }
                 onChangeText={(text) => createChangeHandler("placa", text)}
               />
               {objHeadBilling.placas === null ||
@@ -176,16 +193,21 @@ function DispensarModalComponent(props) {
                   <View style={{ width: 10 }} />
                 ))}
               {objHeadBilling.placas === null ||
-              objHeadBilling.placas?.length <= 1 ? null : (
+              objHeadBilling.placas?.length <= 1 ? null : !(
+                  selectedSurtidor?.isFacturaAnticipo ||
+                  (objHeadBilling.cupocredito > 0 &&
+                    !objHeadBilling.permitir_orden_venta &&
+                    selectedSurtidor.proforma)
+                ) ? (
                 <View style={{ marginLeft: 5 }}>
                   <CustomPicker
                     selectedValue={
                       objHeadBilling.placa !== ""
                         ? objHeadBilling.placa
                         : objHeadBilling.placas &&
-                          objHeadBilling.placas.length > 0
-                        ? objHeadBilling.placas[0]
-                        : ""
+                            objHeadBilling.placas.length > 0
+                          ? objHeadBilling.placas[0]
+                          : ""
                     }
                     text={""}
                     onValueChange={(value) => {
@@ -203,7 +225,7 @@ function DispensarModalComponent(props) {
                     }))}
                   />
                 </View>
-              )}
+              ) : null}
               {objHeadBilling.placa !== "" &&
                 objHeadBilling.placa !== undefined && (
                   <View style={{ alignItems: "center" }}>
@@ -253,13 +275,28 @@ function DispensarModalComponent(props) {
               <TextInput
                 style={{ width: "40%" }}
                 label="Codigo"
+                disabled={
+                  selectedSurtidor?.isFacturaAnticipo ||
+                  (objHeadBilling.cupocredito > 0 &&
+                    !objHeadBilling.permitir_orden_venta &&
+                    selectedSurtidor.proforma)
+                }
                 keyboardType={"numeric"}
                 returnKeyType="search"
                 right={
                   <TextInput.Icon
                     icon="magnify"
                     onPress={() => {
-                      handleOnSubmitEditing("cliente_codigo");
+                      if (
+                        !selectedSurtidor?.isFacturaAnticipo &&
+                        !(
+                          objHeadBilling.cupocredito > 0 &&
+                          !objHeadBilling.permitir_orden_venta &&
+                          selectedSurtidor.proforma
+                        )
+                      ) {
+                        handleOnSubmitEditing("cliente_codigo");
+                      }
                     }}
                   />
                 }
@@ -274,13 +311,21 @@ function DispensarModalComponent(props) {
               <TextInput
                 style={{ flex: 1 }}
                 label="RUC"
+                disabled={
+                  selectedSurtidor?.isFacturaAnticipo ||
+                  (objHeadBilling.cupocredito > 0 &&
+                    !objHeadBilling.permitir_orden_venta &&
+                    selectedSurtidor.proforma)
+                }
                 returnKeyType="search"
                 keyboardType={"numeric"}
                 right={
                   <TextInput.Icon
                     icon="magnify"
                     onPress={() => {
-                      handleOnSubmitEditing("n_identificacion");
+                      if (!selectedSurtidor?.isFacturaAnticipo) {
+                        handleOnSubmitEditing("n_identificacion");
+                      }
                     }}
                   />
                 }
@@ -472,14 +517,14 @@ function DispensarModalComponent(props) {
                             onValueChange={(itemValue) =>
                               createChangeHandler(
                                 "facturaanticipo_id",
-                                itemValue
+                                itemValue,
                               )
                             }
                             text={(() => {
                               const factura = facturasAnticipadas.find(
                                 (item) =>
                                   item.id + "," + item.tipo_documento ===
-                                  objHeadBilling.facturaanticipo_id
+                                  objHeadBilling.facturaanticipo_id,
                               );
                               return factura ? factura.total : "";
                             })()}
@@ -570,7 +615,7 @@ function DispensarModalComponent(props) {
                             createChangeHandlerPago(
                               "formapago_id",
                               value,
-                              index
+                              index,
                             );
                           }}
                         />
@@ -628,7 +673,7 @@ function DispensarModalComponent(props) {
                               createChangeHandler(
                                 "establecimiento_contable_id",
                                 itemValue,
-                                itemIndex
+                                itemIndex,
                               )
                             }
                             items={establecimientosContables.map((item) => ({
@@ -675,7 +720,7 @@ function DispensarModalComponent(props) {
                                 createChangeHandlerPago(
                                   "banco_id",
                                   itemValue,
-                                  itemIndex
+                                  itemIndex,
                                 )
                               }
                               items={bancos.map((item) => ({
@@ -696,7 +741,7 @@ function DispensarModalComponent(props) {
                                 onChangeText={(text) =>
                                   createChangeHandlerPago(
                                     "numerodocumentobancario",
-                                    text
+                                    text,
                                   )
                                 }
                               />
@@ -726,7 +771,7 @@ function DispensarModalComponent(props) {
                                     createChangeHandlerPago(
                                       "tarjeta_id",
                                       itemValue,
-                                      itemIndex
+                                      itemIndex,
                                     )
                                   }
                                   items={tarjetas.map((item) => ({
@@ -751,7 +796,7 @@ function DispensarModalComponent(props) {
                                   onChangeText={(text) =>
                                     createChangeHandlerPago(
                                       "numerodocumentobancario",
-                                      text
+                                      text,
                                     )
                                   }
                                 />
@@ -782,7 +827,7 @@ function DispensarModalComponent(props) {
                                   onChangeText={(text) =>
                                     createChangeHandlerPago(
                                       "referenciavoucher",
-                                      text
+                                      text,
                                     )
                                   }
                                 />

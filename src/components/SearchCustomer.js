@@ -178,7 +178,7 @@ export default function SearchCustomer(props) {
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={searchCustomer}
-            keyboardType={selectedOption === "nombre" ? "text" : "number-pad"}
+            keyboardType={selectedOption === "Nombre" ? "text" : "number-pad"}
           />
         </View>
         <SafeAreaView

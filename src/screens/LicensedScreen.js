@@ -47,7 +47,7 @@ export default function LicensedScreen() {
       const response = await axios.post(
         LICENSED_ENDPOINT,
         formData.toString(),
-        config
+        config,
       );
       return response.data;
     } catch (error) {
@@ -90,7 +90,7 @@ export default function LicensedScreen() {
         const url = res.data.ruta;
         const decodeUrl = url.replace(/\*/g, "/");
         const { client_id, client_password } = res.data;
-        console.error(decodeUrl);
+
         mergeStorage(
           {
             licensed: {
@@ -99,7 +99,7 @@ export default function LicensedScreen() {
               client_password,
             },
           },
-          "configuration"
+          "configuration",
         );
 
         showAlert({

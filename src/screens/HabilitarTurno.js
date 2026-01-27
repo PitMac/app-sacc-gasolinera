@@ -26,6 +26,7 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
   const [isLoading, setIsLoading] = useState(false);
   const orientation = useDeviceOrientation();
   const [codigoMovil, setCodigoMovil] = useState("");
+  const [config, setConfig] = useState(null);
   const [conexionTransactor, setConexionTransactor] = useState({
     conectado: false,
     isConected: false,
@@ -44,12 +45,9 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
     const data = await getToken("configuration");
     const localstorage = await getToken("configuration");
     const arrIdsEstaciones = localstorage.listEstaciones;
-    const estacionesTurno = String(data.turnoActivo.estaciones)
-      .split(",")
-      .map((e) => Number(e.trim()));
-
-    const todasEstanIncluidas = estacionesTurno.every((estacion) =>
-      arrIdsEstaciones.includes(estacion)
+    const todasEstanIncluidas = validarEstacionesTurno(
+      data.turnoActivo,
+      arrIdsEstaciones
     );
 
     if (!todasEstanIncluidas) {
@@ -145,6 +143,7 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
     async function getData() {
       const data = await getToken("configuration");
       setTurnoActivo(data.turnoActivo);
+      setConfig(data);
     }
 
     getData();
@@ -183,6 +182,16 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
 
     getconexionTransactor();
   }, [conexionTransactor.isConected]);
+
+  const validarEstacionesTurno = (turnoActivo, estacionesUsuario) => {
+    const estacionesTurno = String(turnoActivo.estaciones)
+      .split(",")
+      .map((e) => Number(e.trim()));
+
+    return estacionesTurno.every((estacion) =>
+      estacionesUsuario.includes(estacion)
+    );
+  };
 
   const callDataLecturaTransactor = async (keyFila, url) => {
     setIsLoading(true);
@@ -361,6 +370,29 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
   };
 
   const saveGalonajeSurtidores = async () => {
+    if (!config) return;
+
+    const estacionesUsuario = config.listEstaciones;
+
+    const esValido = validarEstacionesTurno(
+      config.turnoActivo,
+      estacionesUsuario
+    );
+
+    if (!esValido) {
+      showAlert({
+        title: "Información",
+        message:
+          "Error. Algunas estaciones del usuario no están seleccionadas en la parametrización, cierre el turno en la máquina correspondiente!",
+        actions: [
+          {
+            label: "Ok",
+            onPress: () => navigation.navigate("Configuration"),
+          },
+        ],
+      });
+      return;
+    }
     setIsLoading(true);
     let filtersurtidores = [];
     const uniqueFilaCodesTransactor = new Set();

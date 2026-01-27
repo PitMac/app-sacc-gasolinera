@@ -56,6 +56,9 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const socketGeneral = getSocket();
 
+  const sendingRef = useRef(false);
+  const habilitarRef = useRef(false);
+
   const [isloading, setIsLoading] = useState(false);
   const [porcentajeIVA, setPorcentajeIVA] = useState(0);
   const logout = useAuthStore((ste) => ste.logout);
@@ -84,7 +87,7 @@ export default function HomeScreen() {
   const [tipoPago, setTipoPago] = useState([]);
   const [tarjetas, setTarjetas] = useState([]);
   const [establecimientosContables, setEstablecimientosContables] = useState(
-    []
+    [],
   );
   const [error, setError] = useState("");
   const [objPago, setObjPago] = useState({
@@ -199,16 +202,16 @@ export default function HomeScreen() {
   const [isOpenModalAddCustomer, setIsOpenModalAddCustomer] = useState(false);
 
   const selectedBancoObj = bancos.find(
-    (b) => b.id === Number(objPago.banco_id)
+    (b) => b.id === Number(objPago.banco_id),
   );
   const selectedTarjetaObj = tarjetas.find(
-    (t) => t.id === Number(objPago.tarjeta_id)
+    (t) => t.id === Number(objPago.tarjeta_id),
   );
   const selectedTipoPagoObj = tipoPago.find(
-    (t) => t.id === Number(objPago.formapago_id)
+    (t) => t.id === Number(objPago.formapago_id),
   );
   const selectedEstablecimientoContable = establecimientosContables.find(
-    (t) => t.id === Number(objHeadBilling.establecimiento_contable_id)
+    (t) => t.id === Number(objHeadBilling.establecimiento_contable_id),
   );
 
   const closeModalClientes = () => {
@@ -232,13 +235,13 @@ export default function HomeScreen() {
       callDataInitial();
       getInformation();
       return () => {};
-    }, [refreshData])
+    }, [refreshData]),
   );
 
   useEffect(() => {
     async function sendFacturacion() {
       const arrayTransactor = arrDataTransactorSurtidores.filter(
-        (data) => data.estado_transactor === "Zi"
+        (data) => data.estado_transactor === "Zi",
       );
       arrayTransactor.forEach((item) => {
         if (!isDesarrollo) {
@@ -327,26 +330,28 @@ export default function HomeScreen() {
       ) {
         const establecimientoObj = localstorage.establecimiento.find(
           (x) =>
-            x.id === parseInt(localstorage.configurationUser.establecimiento_id)
+            x.id ===
+            parseInt(localstorage.configurationUser.establecimiento_id),
         );
         const establecimientoSriObj = localstorage.establecimiento.find(
           (x) =>
-            x.id === parseInt(localstorage.configurationUser.establecimiento_id)
+            x.id ===
+            parseInt(localstorage.configurationUser.establecimiento_id),
         );
         setPuntoEmision(localstorage.configurationUser.p_emision_electronica);
         setEstablecimientoSRI(establecimientoSriObj.numeroestablecimiento);
         const additional_services = JSON.parse(
-          establecimientoObj?.additional_services ?? "{}"
+          establecimientoObj?.additional_services ?? "{}",
         );
         setNodeImpresion(
-          JSON.parse(additional_services?.api_impresiones_node ?? "{}")
+          JSON.parse(additional_services?.api_impresiones_node ?? "{}"),
         );
         setNodeImpresion2(
-          JSON.parse(additional_services?.api_impresiones_node2 ?? "{}")
+          JSON.parse(additional_services?.api_impresiones_node2 ?? "{}"),
         );
         setPortImpresion(localstorage.impresora);
         const conexion_transactor = JSON.parse(
-          additional_services?.conexion_transactor ?? "{}"
+          additional_services?.conexion_transactor ?? "{}",
         );
         const url = conexion_transactor?.url ?? "";
         let objConexion = {
@@ -368,7 +373,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const intervalFacturacion = setInterval(() => {
       setIsRefreshFacturacion(
-        (prevRefreshFacturacion) => !prevRefreshFacturacion
+        (prevRefreshFacturacion) => !prevRefreshFacturacion,
       );
     }, 1000 * 5);
     return () => clearInterval(intervalFacturacion);
@@ -399,7 +404,7 @@ export default function HomeScreen() {
       .split(",")
       .map(Number);
     const arrEstacionesCoincidencias = arrEstacionesParam.filter((numero) =>
-      arrEstacionesTurno.includes(numero)
+      arrEstacionesTurno.includes(numero),
     );
     const codigosEstaciones = arrEstacionesCoincidencias.join(",");
     if (!refresh) {
@@ -409,7 +414,7 @@ export default function HomeScreen() {
       .get(
         `api/v1/gasolinera/surtidor/findby/estacion/${
           codigosEstaciones !== "" ? codigosEstaciones : 0
-        }`
+        }`,
       )
       .then((resp) => {
         if (resp.data.status === 200) {
@@ -419,13 +424,14 @@ export default function HomeScreen() {
             .sort((a, b) => a.estacion.id - b.estacion.id)
             .forEach((item, idx) => {
               const indexValidate = arrayAgrupado.findIndex(
-                (x) => x.id === item.estacion.id
+                (x) => x.id === item.estacion.id,
               );
               if (indexValidate > -1) {
                 const arrDatalado = arrayAgrupado[indexValidate].lados;
                 const validateIndexLado = arrDatalado.findIndex(
                   (x) =>
-                    x.codigo_transactor === item.codigo_transactor.split(",")[0]
+                    x.codigo_transactor ===
+                    item.codigo_transactor.split(",")[0],
                 );
                 if (validateIndexLado < 0) {
                   arrDatalado.push({
@@ -464,7 +470,7 @@ export default function HomeScreen() {
             const dataSurtidor = resp.data.surtidores.find(
               (x) =>
                 x.codigo_transactor.split(",")[0] ===
-                  selectedSurtidor.codigo_transactor && x.proforma
+                  selectedSurtidor.codigo_transactor && x.proforma,
             );
             if (dataSurtidor) {
               setSelectedSurtidor({
@@ -497,7 +503,7 @@ export default function HomeScreen() {
       const objTransactor = arrDataTransactorSurtidores.find(
         (data) =>
           data.codigofila_transactor === codigotransactorSelected[0] &&
-          data.estado_transactor !== "Ii"
+          data.estado_transactor !== "Ii",
       );
       if (objTransactor) {
         setValores({
@@ -556,7 +562,7 @@ export default function HomeScreen() {
     if (isloading) {
       const backHandler = BackHandler.addEventListener(
         "hardwareBackPress",
-        () => true
+        () => true,
       );
       return () => backHandler.remove();
     }
@@ -577,7 +583,7 @@ export default function HomeScreen() {
 
       const fechaBase = now.toISOString().split("T")[0];
       const horaInicio = new Date(
-        `${fechaBase}T${horaInicioStr}:${minutoInicioStr}:00`
+        `${fechaBase}T${horaInicioStr}:${minutoInicioStr}:00`,
       );
       let horaFin = new Date(`${fechaBase}T${horaFinStr}:${minutoFinStr}:00`);
 
@@ -664,7 +670,7 @@ export default function HomeScreen() {
       .validarFiltroPagoUsuario
       ? listtipospago.length > 0
         ? localstorage.tipoPago.filter((tipo) =>
-            listtipospago.includes(tipo.id)
+            listtipospago.includes(tipo.id),
           )
         : []
       : localstorage.tipoPago;
@@ -711,7 +717,7 @@ export default function HomeScreen() {
     const arrValidacion = arrDataTransactorSurtidores.filter(
       (x) =>
         estadosTransactor.cierrecaja.includes(x[2] + x[3]) &&
-        arrCodigoSurtidores.includes(x[0])
+        arrCodigoSurtidores.includes(x[0]),
     );
 
     if (arrValidacion.length == 0) {
@@ -731,7 +737,7 @@ export default function HomeScreen() {
       const res = await instance.get(
         `api/v1/gasolinera/resumen/despacho/turno/${periodofiscal_id}/${currentDate()}/${
           usuario.user_id
-        }`
+        }`,
       );
       if (res.data.status === 200) {
         setDataResumen(res.data.items);
@@ -750,7 +756,7 @@ export default function HomeScreen() {
     } else {
       ToastAndroid.show(
         "Estimado usuario debe seleccionar un surtidor",
-        ToastAndroid.SHORT
+        ToastAndroid.SHORT,
       );
     }
   };
@@ -769,7 +775,7 @@ export default function HomeScreen() {
     let defaultFormapago_id = 0;
     let defaultAbreviatura = "";
     const objTipoPagoDefault = tipoPago.find(
-      (x) => x.id === parametrizacion.tipopago_efectivo_id
+      (x) => x.id === parametrizacion.tipopago_efectivo_id,
     );
 
     if (objTipoPagoDefault) {
@@ -858,7 +864,7 @@ export default function HomeScreen() {
       setValorDispensar({ ...valorDispensar, boquilla: item.codigo_boquilla });
       if (objHeadBilling.pagoanticipado) {
         const arrAnticipos = (objHeadBilling.arrPagosanticipados ?? []).filter(
-          (x) => x.producto_id === item.producto_id
+          (x) => x.producto_id === item.producto_id,
         );
 
         if (arrAnticipos.length >= 1) {
@@ -932,67 +938,67 @@ export default function HomeScreen() {
     }
   };
 
-  const validatePlacaYEstablecimiento = (placa = objHeadBilling.placa) => {
-    let headComprobante = { ...objHeadBilling };
-
-    if (
-      parametrizacion.establecimientoContable ||
-      parametrizacion.validarPlacaForCreditos
-    ) {
-      const arrPlacasCliente =
-        objHeadBilling.placas && typeof objHeadBilling.placas === "string"
-          ? JSON.parse(objHeadBilling.placas)
-          : objHeadBilling.placas ?? [];
-
-      const objPlaca = arrPlacasCliente.find(
-        (x) => x.placa.toUpperCase() === placa.toUpperCase()
-      );
+  const validatePlacaYEstablecimiento = (placa) => {
+    setObjHeadBilling((prev) => {
+      let headComprobante = {
+        ...prev,
+        placa,
+      };
 
       if (
-        parametrizacion.establecimientoContable &&
-        selectedSurtidor?.proforma
+        parametrizacion.establecimientoContable ||
+        parametrizacion.validarPlacaForCreditos
       ) {
-        if (objPlaca && parseInt(objPlaca?.establecimiento) > 0) {
+        const arrPlacasCliente =
+          prev.placas && typeof prev.placas === "string"
+            ? JSON.parse(prev.placas)
+            : (prev.placas ?? []);
+
+        const objPlaca = arrPlacasCliente.find(
+          (x) => x.placa?.toUpperCase() === placa?.toUpperCase(),
+        );
+
+        if (
+          parametrizacion.establecimientoContable &&
+          selectedSurtidor?.proforma &&
+          objPlaca?.establecimiento > 0
+        ) {
           headComprobante.establecimiento_contable_id = parseInt(
-            objPlaca?.establecimiento
+            objPlaca.establecimiento,
           );
         }
-      }
 
-      if (parametrizacion.validarPlacaForCreditos) {
-        if (objPlaca && objPlaca.credito) {
-          headComprobante = {
-            ...headComprobante,
-            cupocredito: objHeadBilling.resp_cupocredito ?? 0,
-            tipoventa:
-              !objHeadBilling.resp_permitir_orden_venta &&
-              objHeadBilling.resp_cupocredito &&
-              parseFloat(objHeadBilling.resp_cupocredito) > 0
-                ? "CR"
-                : "CO",
-            permitir_orden_venta:
-              objHeadBilling.resp_permitir_orden_venta ?? false,
-            pagoanticipado:
-              !objHeadBilling.resp_permitir_orden_venta &&
-              objHeadBilling.resp_pagoanticipado
-                ? objHeadBilling.resp_pagoanticipado
-                : false,
-            arrPagosanticipados: objHeadBilling.resp_arrPagosanticipados ?? [],
-          };
-        } else {
-          headComprobante = {
-            ...headComprobante,
-            cupocredito: 0,
-            tipoventa: "CO",
-            permitir_orden_venta: false,
-            pagoanticipado: false,
-            arrPagosanticipados: [],
-          };
+        if (parametrizacion.validarPlacaForCreditos) {
+          if (objPlaca?.credito) {
+            headComprobante = {
+              ...headComprobante,
+              cupocredito: prev.resp_cupocredito ?? 0,
+              tipoventa:
+                !prev.resp_permitir_orden_venta && prev.resp_cupocredito > 0
+                  ? "CR"
+                  : "CO",
+              permitir_orden_venta: prev.resp_permitir_orden_venta ?? false,
+              pagoanticipado:
+                !prev.resp_permitir_orden_venta && prev.resp_pagoanticipado
+                  ? prev.resp_pagoanticipado
+                  : false,
+              arrPagosanticipados: prev.resp_arrPagosanticipados ?? [],
+            };
+          } else {
+            headComprobante = {
+              ...headComprobante,
+              cupocredito: 0,
+              tipoventa: "CO",
+              permitir_orden_venta: false,
+              pagoanticipado: false,
+              arrPagosanticipados: [],
+            };
+          }
         }
       }
 
-      setObjHeadBilling(headComprobante);
-    }
+      return headComprobante;
+    });
   };
 
   const actionPruebasTecnicas = () => {
@@ -1015,11 +1021,11 @@ export default function HomeScreen() {
   const selectSurtidor = async (data) => {
     if (data.surtidor_id && data.surtidor_id > 0) {
       const estacion = estaciones.find(
-        (e) => data.surtidor.estacion?.id === e.id
+        (e) => data.surtidor.estacion?.id === e.id,
       );
       const arrBoquillasSurtidor = arrsurtidores
         .filter(
-          (x) => x.codigo_transactor.split(",")[0] === data.codigo_transactor
+          (x) => x.codigo_transactor.split(",")[0] === data.codigo_transactor,
         )
         .map((x) => {
           return {
@@ -1050,7 +1056,7 @@ export default function HomeScreen() {
       try {
         const resp = await instance.get(
           `api/v1/gasolinera/surtidor/find/proforma/${data.surtidor_id}/${periodofiscal_id}`,
-          { params: dataSend }
+          { params: dataSend },
         );
 
         const dataProforma = resp.data;
@@ -1096,7 +1102,7 @@ export default function HomeScreen() {
               ? JSON.parse(cliente.placas)
               : [];
             const objPlaca = placasCliente.find(
-              (x) => x.placa.toUpperCase() === placa.toUpperCase()
+              (x) => x.placa.toUpperCase() === placa.toUpperCase(),
             );
             let placaHabilitadaCredito = false;
 
@@ -1226,7 +1232,7 @@ export default function HomeScreen() {
 
     const getData = await instance.get(
       `api/v1/gasolinera/surtidor/desbloqueo/despacho/${codigomoviltransactor}/${periodofiscal_id}`,
-      config
+      config,
     );
     if (getData.data.status === 200) {
       if (getData.data.items === true) {
@@ -1234,7 +1240,7 @@ export default function HomeScreen() {
           desbloqueoSurtidor(data.codigo_transactor.split(",")[0]);
         }
       } else {
-        setRefreshData(!refreshData);
+        setRefreshData((prev) => !prev);
       }
     }
   };
@@ -1244,7 +1250,7 @@ export default function HomeScreen() {
       setIsLoading(true);
       instance
         .get(
-          `api/v1/cartera/cliente/search/advance/${periodofiscal_id}/${objHeadBilling.n_identificacion}`
+          `api/v1/cartera/cliente/search/advance/${periodofiscal_id}/${objHeadBilling.n_identificacion}`,
         )
         .then((resp) => {
           if (resp.data.status === 200) {
@@ -1270,12 +1276,12 @@ export default function HomeScreen() {
               let arrAnticipos = [];
               if (itemSupplier.pagoanticipado) {
                 const objBoquilla = (selectedSurtidor?.boquillas ?? []).find(
-                  (x) => x.codigo_boquilla === valorDispensar.boquilla
+                  (x) => x.codigo_boquilla === valorDispensar.boquilla,
                 );
                 if (objBoquilla) {
                   arrAnticipos = (resp.data.pagosanticipados ?? []).filter(
                     (x) =>
-                      x.producto_id === objBoquilla.producto_id && x.total > 0
+                      x.producto_id === objBoquilla.producto_id && x.total > 0,
                   );
                   setFacturasAnticipadas(arrAnticipos);
                 }
@@ -1340,7 +1346,7 @@ export default function HomeScreen() {
             setIsLoading(false);
             ToastAndroid.show(
               "Estimado usuario no existen datos relacionados a este número de identificación!",
-              ToastAndroid.SHORT
+              ToastAndroid.SHORT,
             );
           }
         })
@@ -1348,7 +1354,7 @@ export default function HomeScreen() {
           setIsLoading(false);
           ToastAndroid.show(
             "Estimado usuario no existen datos relacionados a este número de identificación!",
-            ToastAndroid.SHORT
+            ToastAndroid.SHORT,
           );
           openModalAddCustomer();
         });
@@ -1360,12 +1366,22 @@ export default function HomeScreen() {
     }
   }
 
+  const liberarHabilitar = (status) => {
+    if (status === true) {
+      habilitarRef.current = false;
+    }
+  };
+
   const searchPlaca = async (
     status = null,
     cliente_id = null,
-    isPrueba = false
+    isPrueba = false,
   ) => {
     const numeroplaca = objHeadBilling.placa.replace(/[-]/g, "");
+    if (status === true) {
+      if (habilitarRef.current) return;
+      habilitarRef.current = true;
+    }
     if (
       isPrueba ||
       (!status && numeroplaca !== "") ||
@@ -1390,7 +1406,7 @@ export default function HomeScreen() {
               : [];
           let existePlaca = arrPlacas.some(
             (data) =>
-              data.placa.toLowerCase() === objHeadBilling.placa.toLowerCase()
+              data.placa.toLowerCase() === objHeadBilling.placa.toLowerCase(),
           );
           if (!existePlaca) {
             arrPlacas.push({
@@ -1409,7 +1425,7 @@ export default function HomeScreen() {
               const objFacturaAnticipada = facturasAnticipadas.find(
                 (x) =>
                   x.id === parseInt(dataAnticipo[0]) &&
-                  x.tipo_documento === dataAnticipo[1]
+                  x.tipo_documento === dataAnticipo[1],
               );
               if (
                 objFacturaAnticipada &&
@@ -1435,13 +1451,14 @@ export default function HomeScreen() {
                           "Estimado usuario, El valor de dolares ingresado supera al valor del saldo disponible, saldo disponible: $" +
                           objFacturaAnticipada.total,
                       });
+                      liberarHabilitar(status);
                       return;
                     }
                   } else {
                     const objBoquilla = (
                       selectedSurtidor?.boquillas ?? []
                     ).find(
-                      (x) => x.codigo_boquilla === valorDispensar.boquilla
+                      (x) => x.codigo_boquilla === valorDispensar.boquilla,
                     );
                     if (objBoquilla) {
                       const valorDolares =
@@ -1457,6 +1474,7 @@ export default function HomeScreen() {
                             "Estimado usuario, El galonaje ingresado supera al valor del saldo disponible, saldo disponible: $" +
                             objFacturaAnticipada.total,
                         });
+                        liberarHabilitar(status);
                         return;
                       }
                     } else {
@@ -1466,6 +1484,7 @@ export default function HomeScreen() {
                         message:
                           "Estimado usuario, No se pudo encontrar la boquilla para calcular el precio con los galones",
                       });
+                      liberarHabilitar(status);
                       return;
                     }
                   }
@@ -1477,6 +1496,7 @@ export default function HomeScreen() {
                   message:
                     "Estimado usuario, El cliente no posee cupo disponible para dispensar, por favor verifique",
                 });
+                liberarHabilitar(status);
                 return;
               }
             } else {
@@ -1486,6 +1506,7 @@ export default function HomeScreen() {
                 message:
                   "Estimado usuario, debe seleccionar un Anticipo para poder despachar",
               });
+              liberarHabilitar(status);
               return;
             }
           } else if (
@@ -1516,6 +1537,7 @@ export default function HomeScreen() {
                         " ¿Desea continuar con la transacción?",
                     });
                     if (!respuesta) {
+                      liberarHabilitar(status);
                       return;
                     } else {
                       setIsLoading(true);
@@ -1523,7 +1545,7 @@ export default function HomeScreen() {
                   }
                 } else {
                   const objBoquilla = (selectedSurtidor?.boquillas ?? []).find(
-                    (x) => x.codigo_boquilla === valorDispensar.boquilla
+                    (x) => x.codigo_boquilla === valorDispensar.boquilla,
                   );
                   if (objBoquilla) {
                     const valorDolares =
@@ -1541,6 +1563,7 @@ export default function HomeScreen() {
                           " ¿Desea continuar con la transacción?",
                       });
                       if (!respuesta) {
+                        liberarHabilitar(status);
                         return;
                       } else {
                         setIsLoading(true);
@@ -1553,6 +1576,7 @@ export default function HomeScreen() {
                       message:
                         "Estimado usuario, No se pudo encontrar la boquilla para calcular el precio con los galones",
                     });
+                    liberarHabilitar(status);
                     return;
                   }
                 }
@@ -1565,6 +1589,7 @@ export default function HomeScreen() {
                   "Estimado usuario el cliente no posee cupo, ¿Desea continuar con la transacción?",
               });
               if (!respuesta) {
+                liberarHabilitar(status);
                 return;
               } else {
                 setIsLoading(true);
@@ -1592,12 +1617,12 @@ export default function HomeScreen() {
             cliente_id: isPrueba
               ? consumidorFinal.id
               : parametrizacion.busquedaPlacaConProforma
-              ? cliente_id != null
-                ? cliente_id
-                : status
-                ? objHeadBilling.cliente_id
-                : 0
-              : cliente_id ?? objHeadBilling.cliente_id,
+                ? cliente_id != null
+                  ? cliente_id
+                  : status
+                    ? objHeadBilling.cliente_id
+                    : 0
+                : (cliente_id ?? objHeadBilling.cliente_id),
             direccion: isPrueba
               ? consumidorFinal.direccion
               : objHeadBilling.direccion,
@@ -1636,6 +1661,7 @@ export default function HomeScreen() {
                   "El cliente tiene pagos anticipados, ¿Desea realizar una factura normal o escoger un pago?",
               });
               if (!respuesta) {
+                liberarHabilitar(status);
                 return;
               } else {
                 setIsLoading(true);
@@ -1646,7 +1672,7 @@ export default function HomeScreen() {
               .get(
                 `api/v1/cartera/cliente/search/placa/${periodofiscal_id}/${
                   isPrueba ? "ZZZ9999" : numeroplaca.toUpperCase()
-                }?${queryParams}`
+                }?${queryParams}`,
               )
               .then((resp) => {
                 getData = resp.data;
@@ -1658,7 +1684,7 @@ export default function HomeScreen() {
                   setSelectedSurtidor(null);
                   setIsOpenModalPruebasTecnicas(false);
                   setModalVisible(false);
-                  setRefreshData(!refreshData);
+                  setRefreshData((prev) => !prev);
                 }
                 if (statusData === 200) {
                   const data = getData;
@@ -1685,7 +1711,7 @@ export default function HomeScreen() {
                       const objBoquilla = (
                         selectedSurtidor?.boquillas ?? []
                       ).find(
-                        (x) => x.codigo_boquilla === valorDispensar.boquilla
+                        (x) => x.codigo_boquilla === valorDispensar.boquilla,
                       );
                       if (objBoquilla) {
                         arrAnticipos = (
@@ -1693,7 +1719,7 @@ export default function HomeScreen() {
                         ).filter(
                           (x) =>
                             x.producto_id === objBoquilla.producto_id &&
-                            x.total > 0
+                            x.total > 0,
                         );
                         setFacturasAnticipadas(arrAnticipos);
                       }
@@ -1710,7 +1736,7 @@ export default function HomeScreen() {
                     const objPlaca = responseArrPlacas.find(
                       (x) =>
                         x.placa.toUpperCase() ===
-                        objHeadBilling.placa.toUpperCase()
+                        objHeadBilling.placa.toUpperCase(),
                     );
                     let placaHabilitadaCredito = false;
 
@@ -1731,7 +1757,7 @@ export default function HomeScreen() {
                       telefono: data.item.telefonocelular ?? "",
                       direccion: cliente_id
                         ? prevState.direccion
-                        : data.item.direccion ?? "",
+                        : (data.item.direccion ?? ""),
                       correo: cliente_id
                         ? prevState.correo
                         : data.item.correopersonal,
@@ -1781,7 +1807,7 @@ export default function HomeScreen() {
                   setSelectedSurtidor(null);
                   setIsOpenModalPruebasTecnicas(false);
                   setModalVisible(false);
-                  setRefreshData(!refreshData);
+                  setRefreshData((prev) => !prev);
                 }
                 setIsLoading(false);
               })
@@ -1799,12 +1825,17 @@ export default function HomeScreen() {
                   setSelectedSurtidor(null);
                   setIsOpenModalPruebasTecnicas(false);
                   setModalVisible(false);
-                  setRefreshData(!refreshData);
+                  setRefreshData((prev) => !prev);
                 } else {
                   showAlert({
                     title: "Error",
                     message: "Error en la consulta: " + messageError,
                   });
+                }
+              })
+              .finally(() => {
+                if (status === true) {
+                  habilitarRef.current = false;
                 }
               });
           } else {
@@ -1815,6 +1846,7 @@ export default function HomeScreen() {
                 message: "Perdida de conexion del surtidor con el dispositivo!",
               });
             }
+            liberarHabilitar(status);
             return;
           }
         } else {
@@ -1854,7 +1886,7 @@ export default function HomeScreen() {
       setIsLoading(true);
       instance
         .get(
-          `api/v1/cartera/cliente/search/bycodigo/${periodofiscal_id}/${objHeadBilling.cliente_codigo}`
+          `api/v1/cartera/cliente/search/bycodigo/${periodofiscal_id}/${objHeadBilling.cliente_codigo}`,
         )
         .then((resp) => {
           if (resp.data.status === 200) {
@@ -1878,12 +1910,12 @@ export default function HomeScreen() {
               let arrAnticipos = [];
               if (itemSupplier.pagoanticipado) {
                 const objBoquilla = (selectedSurtidor?.boquillas ?? []).find(
-                  (x) => x.codigo_boquilla === valorDispensar.boquilla
+                  (x) => x.codigo_boquilla === valorDispensar.boquilla,
                 );
                 if (objBoquilla) {
                   arrAnticipos = (resp.data.pagosanticipados ?? []).filter(
                     (x) =>
-                      x.producto_id === objBoquilla.producto_id && x.total > 0
+                      x.producto_id === objBoquilla.producto_id && x.total > 0,
                   );
                   setFacturasAnticipadas(arrAnticipos);
                 }
@@ -1989,7 +2021,7 @@ export default function HomeScreen() {
     } else {
       ToastAndroid.show(
         "Estimado usuario debe seleccionar un surtidor",
-        ToastAndroid.SHORT
+        ToastAndroid.SHORT,
       );
     }
   };
@@ -2029,11 +2061,11 @@ export default function HomeScreen() {
     let arrAnticipos = [];
     if (data.pagoanticipado) {
       const objBoquilla = (selectedSurtidor?.boquillas ?? []).find(
-        (x) => x.codigo_boquilla === valorDispensar.boquilla
+        (x) => x.codigo_boquilla === valorDispensar.boquilla,
       );
       if (objBoquilla) {
         arrAnticipos = (data.pagosanticipados ?? []).filter(
-          (x) => x.producto_id === objBoquilla.producto_id && x.total > 0
+          (x) => x.producto_id === objBoquilla.producto_id && x.total > 0,
         );
         setFacturasAnticipadas(arrAnticipos);
       }
@@ -2109,7 +2141,7 @@ export default function HomeScreen() {
       setIsLoading(false);
       ToastAndroid.show(
         "Debe seleccionar un tipo de combustible para habilitar el dispensador",
-        ToastAndroid.SHORT
+        ToastAndroid.SHORT,
       );
     }
   };
@@ -2123,7 +2155,7 @@ export default function HomeScreen() {
     if (url !== "") {
       let dataPost = "";
       const informationTransactor = arrDataTransactorSurtidores.find(
-        (x) => x.codigofila_transactor === selectedSurtidor.codigo_transactor
+        (x) => x.codigofila_transactor === selectedSurtidor.codigo_transactor,
       );
       if (informationTransactor && informationTransactor[2] === "I") {
         if (
@@ -2278,7 +2310,7 @@ export default function HomeScreen() {
         .put(
           `api/v1/gasolinera/surtidor/save/prueba/tecnica/${objProforma.id}/${periodofiscal_id}/0/0`,
           dataComprobante,
-          config
+          config,
         )
         .then((resp) => {
           if (resp.data.status === 202) {
@@ -2288,7 +2320,7 @@ export default function HomeScreen() {
                 desbloqueoSurtidor(objSurtidor.codigo_transactor.split(",")[0]);
               }
               printEgreso(resp.data.id);
-              setRefreshData(!refreshData);
+              setRefreshData((prev) => !prev);
             } else {
               showAlert({
                 title: "Información",
@@ -2320,17 +2352,18 @@ export default function HomeScreen() {
     const objTransactor = arrDataTransactorSurtidores.find(
       (data) =>
         data.estado_transactor === "Ci" &&
-        data.codigofila_transactor === selectedSurtidor.codigo_transactor
+        data.codigofila_transactor === selectedSurtidor.codigo_transactor,
     );
     if (objTransactor) {
       const arrSurtidorFacturar = arrsurtidores.filter(
-        (x) => x.codigo_transactor.split(",")[0] === objTransactor["0"]
+        (x) => x.codigo_transactor.split(",")[0] === objTransactor["0"],
       );
       if (arrSurtidorFacturar.length > 0) {
         const objProforma = arrSurtidorFacturar.find((pro) => pro.proforma);
         let objSurtidor = arrSurtidorFacturar.find(
           (surt) =>
-            surt.codigo_transactor === objTransactor[0] + "," + objTransactor[8]
+            surt.codigo_transactor ===
+            objTransactor[0] + "," + objTransactor[8],
         );
 
         if (objProforma && objSurtidor) {
@@ -2388,12 +2421,12 @@ export default function HomeScreen() {
             setSelectedSurtidor(null);
             setValores({ dolares: 0, galones: 0, estado_transactor: "" });
             resetData();
-            setRefreshData(!refreshData);
+            setRefreshData((prev) => !prev);
           } else {
             setSelectedSurtidor(null);
             setValores({ dolares: 0, galones: 0, estado_transactor: "" });
             resetData();
-            setRefreshData(!refreshData);
+            setRefreshData((prev) => !prev);
             showAlert({
               title: "Información",
               message:
@@ -2417,7 +2450,7 @@ export default function HomeScreen() {
     setIsLoading(true);
     ToastAndroid.show(
       "El deposito se ha ingresado correctamente",
-      ToastAndroid.SHORT
+      ToastAndroid.SHORT,
     );
     setSearchDepositoModal(false);
     const dataPrint = {
@@ -2470,7 +2503,7 @@ export default function HomeScreen() {
       .get(
         `api/v1/gasolinera/surtidor/information/cierre/turno/${periodofiscal_id}/${
           turnoActivo.asignacionturno_id ?? 0
-        }/${usuario.user_id}/${fechaActual}`
+        }/${usuario.user_id}/${fechaActual}`,
       )
       .then((res) => {
         if (res.data.status === 200) {
@@ -2517,56 +2550,59 @@ export default function HomeScreen() {
   };
 
   const sendFacturacion = () => {
-    setIsLoading(true);
-    const objTransactor = arrDataTransactorSurtidores.find(
-      (data) =>
-        data.estado_transactor === "Ci" &&
-        data.codigofila_transactor === selectedSurtidor.codigo_transactor
-    );
+    if (sendingRef.current) return;
+    sendingRef.current = true;
 
-    if (validateFormatPlaca(objHeadBilling.placa.toUpperCase())) {
-      if (objTransactor) {
-        const arrSurtidorFacturar = arrsurtidores.filter(
-          (x) => x.codigo_transactor.split(",")[0] === objTransactor["0"]
-        );
-        if (arrSurtidorFacturar.length > 0) {
-          //const objProforma = selectedSurtidor.proforma;//arrSurtidorFacturar.find((pro) => pro.proforma);
-          let objSurtidor = arrSurtidorFacturar.find(
-            (surt) =>
-              surt.codigo_transactor ===
-              objTransactor[0] + "," + objTransactor[8]
-          );
-          if (selectedSurtidor.proforma && objSurtidor) {
-            setIsLoading(false);
-            saveFactura(selectedSurtidor.proforma, {
-              ...objSurtidor,
-              dolares: parseFloat(objTransactor[4]).toFixed(2),
-              galones: parseFloat(objTransactor[5]).toFixed(4),
-              transaccion_transactor: objTransactor.transaccion_transactor,
-            });
-          }
-        } else {
-          setIsLoading(false);
-          showAlert({
-            title: "Información",
-            message:
-              "Estimado usuario, no se encontro dispensador enlazado disponible para facturar",
-          });
-        }
-      } else {
-        setIsLoading(false);
-        showAlert({
-          title: "Información",
-          message:
-            "Estimado usuario, el dispensador no ha terminado de despachar, verifique que la manguera este colgada",
-        });
+    setIsLoading(true);
+
+    try {
+      const objTransactor = arrDataTransactorSurtidores.find(
+        (data) =>
+          data.estado_transactor === "Ci" &&
+          data.codigofila_transactor === selectedSurtidor.codigo_transactor,
+      );
+
+      if (!validateFormatPlaca(objHeadBilling.placa.toUpperCase())) {
+        throw new Error("Formato de placa invalida");
       }
-    } else {
+
+      if (!objTransactor) {
+        throw new Error(
+          "El dispensador no ha terminado de despachar, verifique que la manguera este colgada",
+        );
+      }
+
+      const arrSurtidorFacturar = arrsurtidores.filter(
+        (x) => x.codigo_transactor.split(",")[0] === objTransactor[0],
+      );
+
+      if (!arrSurtidorFacturar.length) {
+        throw new Error(
+          "No se encontro dispensador enlazado disponible para facturar",
+        );
+      }
+
+      const objSurtidor = arrSurtidorFacturar.find(
+        (surt) =>
+          surt.codigo_transactor === objTransactor[0] + "," + objTransactor[8],
+      );
+
+      if (!selectedSurtidor.proforma || !objSurtidor) {
+        throw new Error("Datos de surtidor inválidos");
+      }
+
+      saveFactura(selectedSurtidor.proforma, {
+        ...objSurtidor,
+        dolares: parseFloat(objTransactor[4]).toFixed(2),
+        galones: parseFloat(objTransactor[5]).toFixed(4),
+        transaccion_transactor: objTransactor.transaccion_transactor,
+      });
+    } catch (e) {
       setIsLoading(false);
+      sendingRef.current = false;
       showAlert({
         title: "Información",
-        message:
-          "Formato de placa invalida, verifique que tenga ingresado un formato valido",
+        message: e.message,
       });
     }
   };
@@ -2574,7 +2610,7 @@ export default function HomeScreen() {
   const printDocument = (
     idComprobante = null,
     tipo = "FAC",
-    estacion_id = null
+    estacion_id = null,
   ) => {
     setIsLoading(true);
     const dataPrint = {
@@ -2616,12 +2652,12 @@ export default function HomeScreen() {
             print(resp.data.item, estacion_id);
             setValores({ dolares: 0, galones: 0, estado_transactor: "" });
             resetData();
-            setRefreshData(!refreshData);
+            setRefreshData((prev) => !prev);
           } else {
             setSelectedSurtidor(null);
             setValores({ dolares: 0, galones: 0, estado_transactor: "" });
             resetData();
-            setRefreshData(!refreshData);
+            setRefreshData((prev) => !prev);
             showAlert({
               title: "Información",
               message:
@@ -2685,7 +2721,7 @@ export default function HomeScreen() {
       ) {
         ToastAndroid.show(
           "Debe seleccionar un establecimiento contable para autoconsumo",
-          ToastAndroid.SHORT
+          ToastAndroid.SHORT,
         );
         return;
       }
@@ -2719,7 +2755,7 @@ export default function HomeScreen() {
           showAlert({
             title: "Información",
             message: `Estimado usuario, el valor de la factura no debe ser mayor de $${parseFloat(
-              parametrizacion.valorConsumidorFinal
+              parametrizacion.valorConsumidorFinal,
             ).toFixedNew(2)} para consumidor final`,
           });
 
@@ -2808,17 +2844,17 @@ export default function HomeScreen() {
 
       const tipopagoObj = tipoPago.find((x) => x.id === parseInt(formapago_id));
       const deshabilitaImpresion = Boolean(
-        tipopagoObj?.deshabilitar_impresion ?? false
+        tipopagoObj?.deshabilitar_impresion ?? false,
       );
       const placas = objProforma.cliente.placas;
       let arrPlacas =
         (placas ?? []).length > 0
           ? (typeof placas === "string" ? JSON.parse(placas) : placas).filter(
-              (x) => x.placa.replace(/[_-]/g, "") !== ""
+              (x) => x.placa.replace(/[_-]/g, "") !== "",
             )
           : [];
       let existePlaca = arrPlacas.some(
-        (data) => data.placa.toLowerCase() === objProforma.placa.toLowerCase()
+        (data) => data.placa.toLowerCase() === objProforma.placa.toLowerCase(),
       );
       if (!existePlaca) {
         arrPlacas.push({
@@ -2871,7 +2907,7 @@ export default function HomeScreen() {
         .put(
           `api/v1/gasolinera/surtidor/save/comprobante/despacho/${objProforma.id}/${periodofiscal_id}/0/${menuId}`,
           dataComprobante,
-          config
+          config,
         )
         .then((resp) => {
           if (resp.data.status === 202) {
@@ -2891,7 +2927,7 @@ export default function HomeScreen() {
                   setSelectedSurtidor(null);
                   setValores({ dolares: 0, galones: 0, estado_transactor: "" });
                   resetData();
-                  setRefreshData(!refreshData);
+                  setRefreshData((prev) => !prev);
                 }
               } else {
                 printDocument(resp.data.id, resp.data.tipo_documento);
@@ -2906,7 +2942,7 @@ export default function HomeScreen() {
             }
           } else if (resp.data.status === 200) {
             setIsLoading(false);
-            setRefreshData(!refreshData);
+            setRefreshData((prev) => !prev);
           }
         })
         .catch((error) => {
@@ -2923,6 +2959,10 @@ export default function HomeScreen() {
             title: "Error",
             message: "No se puede generar factura: " + messageError,
           });
+        })
+        .finally(() => {
+          sendingRef.current = false;
+          setIsLoading(false);
         });
     } else {
       setIsLoading(false);
@@ -2949,19 +2989,19 @@ export default function HomeScreen() {
       n_identificacion: cliente.numeroidentificacion,
       direccion: cliente.direccion ?? "",
       correo: cliente.correo ?? "",
-      arrPagosanticipados: cliente.pagoanticipado ?? false ? pagos : [],
+      arrPagosanticipados: (cliente.pagoanticipado ?? false) ? pagos : [],
       pagoanticipado: cliente.pagoanticipado ?? false,
     });
 
     let arrAnticipos = [];
     if (cliente.pagoanticipado) {
       const objBoquilla = (selectedSurtidor?.boquillas ?? []).find(
-        (x) => x.codigo_boquilla === valorDispensar.boquilla
+        (x) => x.codigo_boquilla === valorDispensar.boquilla,
       );
 
       if (objBoquilla) {
         arrAnticipos = (pagos ?? []).filter(
-          (x) => x.producto_id === objBoquilla.producto_id && x.total > 0
+          (x) => x.producto_id === objBoquilla.producto_id && x.total > 0,
         );
 
         setFacturasAnticipadas(arrAnticipos);
@@ -3085,7 +3125,7 @@ export default function HomeScreen() {
         status={"C"}
         closeModal={() => {
           setIsOpenCierreTurno(false);
-          setRefreshData(!refreshData);
+          setRefreshData((prev) => !prev);
         }}
       />
     );
@@ -3096,7 +3136,7 @@ export default function HomeScreen() {
       <HabilitarTurno
         closeModal={() => {
           setIsOpenOpenTurno(false);
-          setRefreshData(!refreshData);
+          setRefreshData((prev) => !prev);
         }}
       />
     );
@@ -3281,7 +3321,7 @@ export default function HomeScreen() {
               colors={[Colors.primary]}
               refreshing={isloading}
               onRefresh={() => {
-                setRefreshData(!refreshData);
+                setRefreshData((prev) => !prev);
               }}
             />
           }
@@ -3323,14 +3363,14 @@ export default function HomeScreen() {
                               </Text>
                               {subItem.lados
                                 .sort((a, b) =>
-                                  a.posicion < b.posicion ? -1 : 1
+                                  a.posicion < b.posicion ? -1 : 1,
                                 )
                                 .map((dataLado, idx) => {
                                   const informationTransactor =
                                     arrDataTransactorSurtidores.find(
                                       (x) =>
                                         x.codigofila_transactor ===
-                                        dataLado.codigo_transactor
+                                        dataLado.codigo_transactor,
                                     );
                                   const objInfoSurtidor = arrsurtidores.find(
                                     (x) =>
@@ -3339,7 +3379,7 @@ export default function HomeScreen() {
                                           "") +
                                           "," +
                                           informationTransactor?.codigopistola_transactor ??
-                                      ""
+                                      "",
                                   );
 
                                   const arrFilaSurtidores =
@@ -3347,7 +3387,7 @@ export default function HomeScreen() {
                                       (x) =>
                                         x.codigo_transactor.split(",")[0] ===
                                         (informationTransactor?.codigofila_transactor ??
-                                          "")
+                                          ""),
                                     );
                                   const surtidoresFila_ids = arrFilaSurtidores
                                     .map((obj) => obj.id)
@@ -3362,7 +3402,7 @@ export default function HomeScreen() {
                                     objInfoSurtidor &&
                                     !estadosTransactor.cobrando.includes(
                                       informationTransactor?.estado_transactor ??
-                                        ""
+                                        "",
                                     )
                                   ) {
                                     colorFondo =
@@ -3374,7 +3414,7 @@ export default function HomeScreen() {
                                     objInfoSurtidor &&
                                     estadosTransactor.cobrando.includes(
                                       informationTransactor?.estado_transactor ??
-                                        ""
+                                        "",
                                     )
                                   ) {
                                     colorFondo = "#BFB9B9";
@@ -3386,7 +3426,7 @@ export default function HomeScreen() {
                                         (x) =>
                                           x.codigo_transactor.split(",")[0] ===
                                           (informationTransactor?.codigofila_transactor ??
-                                            "")
+                                            ""),
                                       );
                                     surtidor_id = findFirstBoquilla?.id ?? 0;
                                     surtidor = findFirstBoquilla ?? 0;
@@ -3460,7 +3500,7 @@ export default function HomeScreen() {
                                           </Text>
                                           {estadosTransactor.cobrando.includes(
                                             informationTransactor?.estado_transactor ??
-                                              ""
+                                              "",
                                           ) ? (
                                             <PagandoSVG
                                               height={80}
@@ -3468,7 +3508,7 @@ export default function HomeScreen() {
                                             />
                                           ) : estadosTransactor.dispensando.includes(
                                               informationTransactor?.estado_transactor ??
-                                                ""
+                                                "",
                                             ) ? (
                                             <DispensandoSVG
                                               height={80}
