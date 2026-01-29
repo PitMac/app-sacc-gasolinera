@@ -150,28 +150,14 @@ function DispensarModalComponent(props) {
               <TextInput
                 style={{ flex: 1 }}
                 label="Placa"
-                editable={
-                  !(
-                    selectedSurtidor?.isFacturaAnticipo ||
-                    (objHeadBilling.cupocredito > 0 &&
-                      !objHeadBilling.permitir_orden_venta &&
-                      selectedSurtidor.proforma)
-                  )
-                }
+                editable={!selectedSurtidor?.isFacturaAnticipo}
                 error={error !== ""}
                 maxLength={8}
                 right={
                   <TextInput.Icon
                     icon="magnify"
                     onPress={() => {
-                      if (
-                        !selectedSurtidor?.isFacturaAnticipo &&
-                        !(
-                          objHeadBilling.cupocredito > 0 &&
-                          !objHeadBilling.permitir_orden_venta &&
-                          selectedSurtidor.proforma
-                        )
-                      ) {
+                      if (!selectedSurtidor?.isFacturaAnticipo) {
                         handleOnSubmitEditing("placa");
                       }
                     }}
@@ -193,12 +179,8 @@ function DispensarModalComponent(props) {
                   <View style={{ width: 10 }} />
                 ))}
               {objHeadBilling.placas === null ||
-              objHeadBilling.placas?.length <= 1 ? null : !(
-                  selectedSurtidor?.isFacturaAnticipo ||
-                  (objHeadBilling.cupocredito > 0 &&
-                    !objHeadBilling.permitir_orden_venta &&
-                    selectedSurtidor.proforma)
-                ) ? (
+              objHeadBilling.placas?.length <=
+                1 ? null : !selectedSurtidor?.isFacturaAnticipo ? (
                 <View style={{ marginLeft: 5 }}>
                   <CustomPicker
                     selectedValue={
@@ -275,12 +257,7 @@ function DispensarModalComponent(props) {
               <TextInput
                 style={{ width: "40%" }}
                 label="Codigo"
-                disabled={
-                  selectedSurtidor?.isFacturaAnticipo ||
-                  (objHeadBilling.cupocredito > 0 &&
-                    !objHeadBilling.permitir_orden_venta &&
-                    selectedSurtidor.proforma)
-                }
+                editable={!selectedSurtidor?.isFacturaAnticipo}
                 keyboardType={"numeric"}
                 returnKeyType="search"
                 right={
@@ -311,12 +288,7 @@ function DispensarModalComponent(props) {
               <TextInput
                 style={{ flex: 1 }}
                 label="RUC"
-                disabled={
-                  selectedSurtidor?.isFacturaAnticipo ||
-                  (objHeadBilling.cupocredito > 0 &&
-                    !objHeadBilling.permitir_orden_venta &&
-                    selectedSurtidor.proforma)
-                }
+                editable={!selectedSurtidor?.isFacturaAnticipo}
                 returnKeyType="search"
                 keyboardType={"numeric"}
                 right={

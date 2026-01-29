@@ -1366,12 +1366,6 @@ export default function HomeScreen() {
     }
   }
 
-  const liberarHabilitar = (status) => {
-    if (status === true) {
-      habilitarRef.current = false;
-    }
-  };
-
   const searchPlaca = async (
     status = null,
     cliente_id = null,
@@ -1382,77 +1376,162 @@ export default function HomeScreen() {
       if (habilitarRef.current) return;
       habilitarRef.current = true;
     }
-    if (
-      isPrueba ||
-      (!status && numeroplaca !== "") ||
-      (numeroplaca !== "" && objHeadBilling.cliente_id > 0)
-    ) {
-      if (validateFormatPlaca(numeroplaca.toUpperCase())) {
-        if (
-          !status ||
-          (status &&
-            (valorDispensar.boquilla === "01" ||
-              valorDispensar.boquilla === "02" ||
-              valorDispensar.boquilla === "03"))
-        ) {
-          setIsLoading(true);
-          let arrPlacas = [];
-          arrPlacas =
-            (objHeadBilling.placas ?? []).length > 0
-              ? (typeof objHeadBilling.placas === "string"
-                  ? JSON.parse(objHeadBilling.placas)
-                  : objHeadBilling.placas
-                ).filter((x) => x.placa.replace(/[_-]/g, "") !== "")
-              : [];
-          let existePlaca = arrPlacas.some(
-            (data) =>
-              data.placa.toLowerCase() === objHeadBilling.placa.toLowerCase(),
-          );
-          if (!existePlaca) {
-            arrPlacas.push({
-              codigo: arrPlacas.length + 1,
-              placa: objHeadBilling.placa.toUpperCase(),
-              modelo: "",
-            });
-          }
-          let valorAnticipo = null;
-          if (status && objHeadBilling.pagoanticipado) {
-            if (
-              objHeadBilling.facturaanticipo_id !== "" &&
-              parseInt(objHeadBilling.facturaanticipo_id) > 0
-            ) {
-              const dataAnticipo = objHeadBilling.facturaanticipo_id.split(",");
-              const objFacturaAnticipada = facturasAnticipadas.find(
-                (x) =>
-                  x.id === parseInt(dataAnticipo[0]) &&
-                  x.tipo_documento === dataAnticipo[1],
-              );
+    try {
+      if (
+        isPrueba ||
+        (!status && numeroplaca !== "") ||
+        (numeroplaca !== "" && objHeadBilling.cliente_id > 0)
+      ) {
+        if (validateFormatPlaca(numeroplaca.toUpperCase())) {
+          if (
+            !status ||
+            (status &&
+              (valorDispensar.boquilla === "01" ||
+                valorDispensar.boquilla === "02" ||
+                valorDispensar.boquilla === "03"))
+          ) {
+            setIsLoading(true);
+            let arrPlacas = [];
+            arrPlacas =
+              (objHeadBilling.placas ?? []).length > 0
+                ? (typeof objHeadBilling.placas === "string"
+                    ? JSON.parse(objHeadBilling.placas)
+                    : objHeadBilling.placas
+                  ).filter((x) => x.placa.replace(/[_-]/g, "") !== "")
+                : [];
+            let existePlaca = arrPlacas.some(
+              (data) =>
+                data.placa.toLowerCase() === objHeadBilling.placa.toLowerCase(),
+            );
+            if (!existePlaca) {
+              arrPlacas.push({
+                codigo: arrPlacas.length + 1,
+                placa: objHeadBilling.placa.toUpperCase(),
+                modelo: "",
+              });
+            }
+            let valorAnticipo = null;
+            if (status && objHeadBilling.pagoanticipado) {
               if (
-                objFacturaAnticipada &&
-                parseFloat(objFacturaAnticipada.total) > 0
+                objHeadBilling.facturaanticipo_id !== "" &&
+                parseInt(objHeadBilling.facturaanticipo_id) > 0
               ) {
+                const dataAnticipo =
+                  objHeadBilling.facturaanticipo_id.split(",");
+                const objFacturaAnticipada = facturasAnticipadas.find(
+                  (x) =>
+                    x.id === parseInt(dataAnticipo[0]) &&
+                    x.tipo_documento === dataAnticipo[1],
+                );
+                if (
+                  objFacturaAnticipada &&
+                  parseFloat(objFacturaAnticipada.total) > 0
+                ) {
+                  if (
+                    (valorDispensar.galones === "" ||
+                      parseFloat(valorDispensar.galones) === 0) &&
+                    (valorDispensar.dolares === "" ||
+                      parseFloat(valorDispensar.dolares) === 0)
+                  ) {
+                    valorAnticipo = parseFloat(objFacturaAnticipada.total);
+                  } else {
+                    if (parseFloat(valorDispensar.dolares) > 0) {
+                      if (
+                        parseFloat(valorDispensar.dolares) >
+                        parseFloat(objFacturaAnticipada.total)
+                      ) {
+                        setIsLoading(false);
+                        showAlert({
+                          title: "Información",
+                          message:
+                            "Estimado usuario, El valor de dolares ingresado supera al valor del saldo disponible, saldo disponible: $" +
+                            objFacturaAnticipada.total,
+                        });
+                        return;
+                      }
+                    } else {
+                      const objBoquilla = (
+                        selectedSurtidor?.boquillas ?? []
+                      ).find(
+                        (x) => x.codigo_boquilla === valorDispensar.boquilla,
+                      );
+                      if (objBoquilla) {
+                        const valorDolares =
+                          parseFloat(valorDispensar.galones) * objBoquilla.pvp;
+                        if (
+                          valorDolares.toFixedNew(2) >
+                          parseFloat(objFacturaAnticipada.total)
+                        ) {
+                          setIsLoading(false);
+                          showAlert({
+                            title: "Información",
+                            message:
+                              "Estimado usuario, El galonaje ingresado supera al valor del saldo disponible, saldo disponible: $" +
+                              objFacturaAnticipada.total,
+                          });
+                          return;
+                        }
+                      } else {
+                        setIsLoading(false);
+                        showAlert({
+                          title: "Información",
+                          message:
+                            "Estimado usuario, No se pudo encontrar la boquilla para calcular el precio con los galones",
+                        });
+                        return;
+                      }
+                    }
+                  }
+                } else {
+                  setIsLoading(false);
+                  showAlert({
+                    title: "Información",
+                    message:
+                      "Estimado usuario, El cliente no posee cupo disponible para dispensar, por favor verifique",
+                  });
+                  return;
+                }
+              } else {
+                setIsLoading(false);
+                showAlert({
+                  title: "Información",
+                  message:
+                    "Estimado usuario, debe seleccionar un Anticipo para poder despachar",
+                });
+                return;
+              }
+            } else if (
+              status &&
+              objHeadBilling.tipoventa === "CR" &&
+              parametrizacion.isCupoCliente
+            ) {
+              if (objHeadBilling.saldoFacturas > 0) {
                 if (
                   (valorDispensar.galones === "" ||
                     parseFloat(valorDispensar.galones) === 0) &&
                   (valorDispensar.dolares === "" ||
                     parseFloat(valorDispensar.dolares) === 0)
                 ) {
-                  valorAnticipo = parseFloat(objFacturaAnticipada.total);
+                  valorAnticipo = parseFloat(objHeadBilling.saldoFacturas);
                 } else {
                   if (parseFloat(valorDispensar.dolares) > 0) {
                     if (
                       parseFloat(valorDispensar.dolares) >
-                      parseFloat(objFacturaAnticipada.total)
+                      parseFloat(objHeadBilling.saldoFacturas)
                     ) {
                       setIsLoading(false);
-                      showAlert({
+                      const respuesta = await showModal({
                         title: "Información",
-                        message:
-                          "Estimado usuario, El valor de dolares ingresado supera al valor del saldo disponible, saldo disponible: $" +
-                          objFacturaAnticipada.total,
+                        content:
+                          "Estimado usuario, El valor de dolares ingresado supera al valor del cupo disponible, saldo disponible: $" +
+                          objHeadBilling.saldoFacturas +
+                          " ¿Desea continuar con la transacción?",
                       });
-                      liberarHabilitar(status);
-                      return;
+                      if (!respuesta) {
+                        return;
+                      } else {
+                        setIsLoading(true);
+                      }
                     }
                   } else {
                     const objBoquilla = (
@@ -1465,17 +1544,21 @@ export default function HomeScreen() {
                         parseFloat(valorDispensar.galones) * objBoquilla.pvp;
                       if (
                         valorDolares.toFixedNew(2) >
-                        parseFloat(objFacturaAnticipada.total)
+                        parseFloat(objHeadBilling.saldoFacturas)
                       ) {
                         setIsLoading(false);
-                        showAlert({
+                        const respuesta = await showModal({
                           title: "Información",
-                          message:
+                          content:
                             "Estimado usuario, El galonaje ingresado supera al valor del saldo disponible, saldo disponible: $" +
-                            objFacturaAnticipada.total,
+                            objHeadBilling.saldoFacturas +
+                            " ¿Desea continuar con la transacción?",
                         });
-                        liberarHabilitar(status);
-                        return;
+                        if (!respuesta) {
+                          return;
+                        } else {
+                          setIsLoading(true);
+                        }
                       }
                     } else {
                       setIsLoading(false);
@@ -1484,399 +1567,315 @@ export default function HomeScreen() {
                         message:
                           "Estimado usuario, No se pudo encontrar la boquilla para calcular el precio con los galones",
                       });
-                      liberarHabilitar(status);
                       return;
                     }
                   }
                 }
               } else {
                 setIsLoading(false);
+                const respuesta = await showModal({
+                  title: "Información",
+                  content:
+                    "Estimado usuario el cliente no posee cupo, ¿Desea continuar con la transacción?",
+                });
+                if (!respuesta) {
+                  return;
+                } else {
+                  setIsLoading(true);
+                }
+              }
+            }
+            const consumidorFinal = JSON.parse(parametrizacion.consumidorFinal);
+            const dataSend = {
+              searchAdvance: true,
+              establecimiento_sri: establecimientoSRI,
+              puntoemision_sri: puntoEmision,
+              establecimiento_id: establecimientoid,
+              fechaemision: currentDate(),
+              caja_id: cajaId,
+              usuariovendedor_id: usuario.user_id,
+              surtidor_id: selectedSurtidor.surtidor_id,
+              factura_id: 0,
+              notaentrega_id: selectedSurtidor?.notaentrega?.id ?? 0,
+              proforma_id: selectedSurtidor?.proforma?.id ?? 0,
+              turno_id: turnoActivo?.id ?? 0,
+              asignacionturno_id: turnoActivo?.asignacionturno_id ?? 0,
+              grupomenu_id: 0,
+              isMobile: true,
+              menu_id: menuId,
+              cliente_id: isPrueba
+                ? consumidorFinal.id
+                : parametrizacion.busquedaPlacaConProforma
+                  ? cliente_id != null
+                    ? cliente_id
+                    : status
+                      ? objHeadBilling.cliente_id
+                      : 0
+                  : (cliente_id ?? objHeadBilling.cliente_id),
+              direccion: isPrueba
+                ? consumidorFinal.direccion
+                : objHeadBilling.direccion,
+              correo: isPrueba ? consumidorFinal.email : objHeadBilling.correo,
+              telefono: isPrueba
+                ? consumidorFinal.telefono
+                : objHeadBilling.telefono,
+              generaproforma: status ?? false,
+              bodega_id: bodegaId,
+              placas: JSON.stringify(arrPlacas),
+              pago: status ? JSON.stringify(objPago) : "",
+              tipoventa: objHeadBilling.tipoventa ?? "CO",
+              transaccion_transactor:
+                selectedSurtidor?.transaccion_transactor ?? 0,
+              facturaanticipo_id: objHeadBilling.pagoanticipado
+                ? objHeadBilling.facturaanticipo_id
+                : 0,
+              pruebatecnica: isPrueba,
+              verificarProforma: true,
+            };
+
+            let getData = null;
+            let statusData = 0;
+            const queryParams = new URLSearchParams(dataSend).toString();
+            if ((conexionTransactor?.conectado_post ?? false) || !status) {
+              if (
+                !objHeadBilling.pagoanticipado &&
+                (objHeadBilling?.arrPagosanticipados ?? []).length > 0 &&
+                status
+              ) {
+                setIsLoading(false);
+
+                const respuesta = await showModal({
+                  title: "Información",
+                  content:
+                    "El cliente tiene pagos anticipados, ¿Desea realizar una factura normal o escoger un pago?",
+                });
+                if (!respuesta) {
+                  return;
+                } else {
+                  setIsLoading(true);
+                }
+              }
+
+              instance
+                .get(
+                  `api/v1/cartera/cliente/search/placa/${periodofiscal_id}/${
+                    isPrueba ? "ZZZ9999" : numeroplaca.toUpperCase()
+                  }?${queryParams}`,
+                )
+                .then((resp) => {
+                  getData = resp.data;
+                  statusData = resp.data.status;
+                  if (resp.data.status === 200 && status) {
+                    if (!isDesarrollo) {
+                      despachoDispensador(valorAnticipo);
+                    }
+                    setSelectedSurtidor(null);
+                    setIsOpenModalPruebasTecnicas(false);
+                    setModalVisible(false);
+                    setRefreshData((prev) => !prev);
+                  }
+                  if (statusData === 200) {
+                    const data = getData;
+                    if (status) {
+                      setValorDispensar({
+                        dolares: 0,
+                        galones: 0,
+                        boquilla: "",
+                      });
+                      setObjHeadBilling({
+                        ...objHeadBilling,
+                        placa: "",
+                        cliente_id: 0,
+                        cliente_codigo: "",
+                        n_identificacion: "",
+                        nombreCliente: "",
+                        telefono: "",
+                        direccion: "",
+                        direccionFinal: "",
+                        correo: "",
+                        diasplazo: 0,
+                        nombrecomercial: "",
+                        saldoFacturas: 0,
+                      });
+                    } else {
+                      let arrAnticipos = [];
+                      if (data.item.pagoanticipado) {
+                        const objBoquilla = (
+                          selectedSurtidor?.boquillas ?? []
+                        ).find(
+                          (x) => x.codigo_boquilla === valorDispensar.boquilla,
+                        );
+                        if (objBoquilla) {
+                          arrAnticipos = (
+                            data.item.pagosanticipados ?? []
+                          ).filter(
+                            (x) =>
+                              x.producto_id === objBoquilla.producto_id &&
+                              x.total > 0,
+                          );
+                          setFacturasAnticipadas(arrAnticipos);
+                        }
+                      }
+
+                      const rawPlacas = data.item?.placas;
+
+                      const strPlacas =
+                        typeof rawPlacas === "string"
+                          ? rawPlacas
+                          : JSON.stringify(rawPlacas);
+
+                      const responseArrPlacas = JSON.parse(strPlacas ?? "[]");
+                      const objPlaca = responseArrPlacas.find(
+                        (x) =>
+                          x.placa.toUpperCase() ===
+                          objHeadBilling.placa.toUpperCase(),
+                      );
+                      let placaHabilitadaCredito = false;
+
+                      if (parametrizacion.validarPlacaForCreditos) {
+                        if (objPlaca && objPlaca.credito) {
+                          placaHabilitadaCredito = true;
+                        }
+                      } else {
+                        placaHabilitadaCredito = true;
+                      }
+
+                      setObjHeadBilling((prevState) => ({
+                        ...prevState,
+                        cliente_codigo: data.item.codigo,
+                        cliente_id: data.item.id,
+                        n_identificacion: data.item.numeroidentificacion,
+                        nombreCliente: data.item.nombrecompleto,
+                        telefono: data.item.telefonocelular ?? "",
+                        direccion: cliente_id
+                          ? prevState.direccion
+                          : (data.item.direccion ?? ""),
+                        correo: cliente_id
+                          ? prevState.correo
+                          : data.item.correopersonal,
+                        placas: data.item.placas,
+                        placa: objHeadBilling.placa,
+                        cupocredito:
+                          !data.item.permitir_orden_venta &&
+                          data.item.cupocredito &&
+                          placaHabilitadaCredito
+                            ? parseFloat(data.item.cupocredito)
+                            : 0,
+                        tipoventa:
+                          !data.item.permitir_orden_venta &&
+                          data.item.cupocredito &&
+                          parseFloat(data.item.cupocredito) > 0 &&
+                          placaHabilitadaCredito
+                            ? "CR"
+                            : "CO",
+                        permitir_orden_venta:
+                          data.item.permitir_orden_venta &&
+                          placaHabilitadaCredito
+                            ? data.item.permitir_orden_venta
+                            : false,
+                        pagoanticipado:
+                          !data.item.permitir_orden_venta &&
+                          data.item.pagoanticipado &&
+                          placaHabilitadaCredito
+                            ? data.item.pagoanticipado
+                            : false,
+                        arrPagosanticipados: data.item.pagosanticipados ?? [],
+                        facturaanticipo_id:
+                          arrAnticipos.length >= 1
+                            ? arrAnticipos[0].id +
+                              "," +
+                              arrAnticipos[0].tipo_documento
+                            : 0,
+                        resp_permitir_orden_venta:
+                          data.item.permitir_orden_venta,
+                        resp_pagoanticipado: data.item.pagoanticipado,
+                        resp_cupocredito: data.item.cupocredito ?? 0,
+                        resp_arrPagosanticipados:
+                          data.item.pagosanticipados ?? [],
+                        saldoFacturas: data.item.saldoFacturas ?? 0,
+                      }));
+                    }
+                  } else if (statusData === 203) {
+                    //desbloqueoSurtidor(selectedSurtidor.codigo_transactor); //no descomentar
+                  } else if (statusData === 406) {
+                    setSelectedSurtidor(null);
+                    setIsOpenModalPruebasTecnicas(false);
+                    setModalVisible(false);
+                    setRefreshData((prev) => !prev);
+                  }
+                  setIsLoading(false);
+                })
+                .catch((error) => {
+                  let messageError = "";
+                  if (error.response?.data) {
+                    if (error.response?.data?.detail) {
+                      messageError = error.response?.data?.detail;
+                    } else if (error.response?.data?.error?.message) {
+                      messageError = error.response?.data?.error?.message;
+                    }
+                  }
+                  setIsLoading(false);
+                  if (messageError.includes("Registro duplicado")) {
+                    setSelectedSurtidor(null);
+                    setIsOpenModalPruebasTecnicas(false);
+                    setModalVisible(false);
+                    setRefreshData((prev) => !prev);
+                  } else {
+                    showAlert({
+                      title: "Error",
+                      message: "Error en la consulta: " + messageError,
+                    });
+                  }
+                });
+            } else {
+              setIsLoading(false);
+              if (status) {
                 showAlert({
                   title: "Información",
                   message:
-                    "Estimado usuario, El cliente no posee cupo disponible para dispensar, por favor verifique",
+                    "Perdida de conexion del surtidor con el dispositivo!",
                 });
-                liberarHabilitar(status);
-                return;
               }
-            } else {
-              setIsLoading(false);
-              showAlert({
-                title: "Información",
-                message:
-                  "Estimado usuario, debe seleccionar un Anticipo para poder despachar",
-              });
-              liberarHabilitar(status);
               return;
             }
-          } else if (
-            status &&
-            objHeadBilling.tipoventa === "CR" &&
-            parametrizacion.isCupoCliente
-          ) {
-            if (objHeadBilling.saldoFacturas > 0) {
-              if (
-                (valorDispensar.galones === "" ||
-                  parseFloat(valorDispensar.galones) === 0) &&
-                (valorDispensar.dolares === "" ||
-                  parseFloat(valorDispensar.dolares) === 0)
-              ) {
-                valorAnticipo = parseFloat(objHeadBilling.saldoFacturas);
-              } else {
-                if (parseFloat(valorDispensar.dolares) > 0) {
-                  if (
-                    parseFloat(valorDispensar.dolares) >
-                    parseFloat(objHeadBilling.saldoFacturas)
-                  ) {
-                    setIsLoading(false);
-                    const respuesta = await showModal({
-                      title: "Información",
-                      content:
-                        "Estimado usuario, El valor de dolares ingresado supera al valor del cupo disponible, saldo disponible: $" +
-                        objHeadBilling.saldoFacturas +
-                        " ¿Desea continuar con la transacción?",
-                    });
-                    if (!respuesta) {
-                      liberarHabilitar(status);
-                      return;
-                    } else {
-                      setIsLoading(true);
-                    }
-                  }
-                } else {
-                  const objBoquilla = (selectedSurtidor?.boquillas ?? []).find(
-                    (x) => x.codigo_boquilla === valorDispensar.boquilla,
-                  );
-                  if (objBoquilla) {
-                    const valorDolares =
-                      parseFloat(valorDispensar.galones) * objBoquilla.pvp;
-                    if (
-                      valorDolares.toFixedNew(2) >
-                      parseFloat(objHeadBilling.saldoFacturas)
-                    ) {
-                      setIsLoading(false);
-                      const respuesta = await showModal({
-                        title: "Información",
-                        content:
-                          "Estimado usuario, El galonaje ingresado supera al valor del saldo disponible, saldo disponible: $" +
-                          objHeadBilling.saldoFacturas +
-                          " ¿Desea continuar con la transacción?",
-                      });
-                      if (!respuesta) {
-                        liberarHabilitar(status);
-                        return;
-                      } else {
-                        setIsLoading(true);
-                      }
-                    }
-                  } else {
-                    setIsLoading(false);
-                    showAlert({
-                      title: "Información",
-                      message:
-                        "Estimado usuario, No se pudo encontrar la boquilla para calcular el precio con los galones",
-                    });
-                    liberarHabilitar(status);
-                    return;
-                  }
-                }
-              }
-            } else {
-              setIsLoading(false);
-              const respuesta = await showModal({
-                title: "Información",
-                content:
-                  "Estimado usuario el cliente no posee cupo, ¿Desea continuar con la transacción?",
-              });
-              if (!respuesta) {
-                liberarHabilitar(status);
-                return;
-              } else {
-                setIsLoading(true);
-              }
-            }
-          }
-          const consumidorFinal = JSON.parse(parametrizacion.consumidorFinal);
-          const dataSend = {
-            searchAdvance: true,
-            establecimiento_sri: establecimientoSRI,
-            puntoemision_sri: puntoEmision,
-            establecimiento_id: establecimientoid,
-            fechaemision: currentDate(),
-            caja_id: cajaId,
-            usuariovendedor_id: usuario.user_id,
-            surtidor_id: selectedSurtidor.surtidor_id,
-            factura_id: 0,
-            notaentrega_id: selectedSurtidor?.notaentrega?.id ?? 0,
-            proforma_id: selectedSurtidor?.proforma?.id ?? 0,
-            turno_id: turnoActivo?.id ?? 0,
-            asignacionturno_id: turnoActivo?.asignacionturno_id ?? 0,
-            grupomenu_id: 0,
-            isMobile: true,
-            menu_id: menuId,
-            cliente_id: isPrueba
-              ? consumidorFinal.id
-              : parametrizacion.busquedaPlacaConProforma
-                ? cliente_id != null
-                  ? cliente_id
-                  : status
-                    ? objHeadBilling.cliente_id
-                    : 0
-                : (cliente_id ?? objHeadBilling.cliente_id),
-            direccion: isPrueba
-              ? consumidorFinal.direccion
-              : objHeadBilling.direccion,
-            correo: isPrueba ? consumidorFinal.email : objHeadBilling.correo,
-            telefono: isPrueba
-              ? consumidorFinal.telefono
-              : objHeadBilling.telefono,
-            generaproforma: status ?? false,
-            bodega_id: bodegaId,
-            placas: JSON.stringify(arrPlacas),
-            pago: status ? JSON.stringify(objPago) : "",
-            tipoventa: objHeadBilling.tipoventa ?? "CO",
-            transaccion_transactor:
-              selectedSurtidor?.transaccion_transactor ?? 0,
-            facturaanticipo_id: objHeadBilling.pagoanticipado
-              ? objHeadBilling.facturaanticipo_id
-              : 0,
-            pruebatecnica: isPrueba,
-            verificarProforma: true,
-          };
-
-          let getData = null;
-          let statusData = 0;
-          const queryParams = new URLSearchParams(dataSend).toString();
-          if ((conexionTransactor?.conectado_post ?? false) || !status) {
-            if (
-              !objHeadBilling.pagoanticipado &&
-              (objHeadBilling?.arrPagosanticipados ?? []).length > 0 &&
-              status
-            ) {
-              setIsLoading(false);
-
-              const respuesta = await showModal({
-                title: "Información",
-                content:
-                  "El cliente tiene pagos anticipados, ¿Desea realizar una factura normal o escoger un pago?",
-              });
-              if (!respuesta) {
-                liberarHabilitar(status);
-                return;
-              } else {
-                setIsLoading(true);
-              }
-            }
-
-            instance
-              .get(
-                `api/v1/cartera/cliente/search/placa/${periodofiscal_id}/${
-                  isPrueba ? "ZZZ9999" : numeroplaca.toUpperCase()
-                }?${queryParams}`,
-              )
-              .then((resp) => {
-                getData = resp.data;
-                statusData = resp.data.status;
-                if (resp.data.status === 200 && status) {
-                  if (!isDesarrollo) {
-                    despachoDispensador(valorAnticipo);
-                  }
-                  setSelectedSurtidor(null);
-                  setIsOpenModalPruebasTecnicas(false);
-                  setModalVisible(false);
-                  setRefreshData((prev) => !prev);
-                }
-                if (statusData === 200) {
-                  const data = getData;
-                  if (status) {
-                    setValorDispensar({ dolares: 0, galones: 0, boquilla: "" });
-                    setObjHeadBilling({
-                      ...objHeadBilling,
-                      placa: "",
-                      cliente_id: 0,
-                      cliente_codigo: "",
-                      n_identificacion: "",
-                      nombreCliente: "",
-                      telefono: "",
-                      direccion: "",
-                      direccionFinal: "",
-                      correo: "",
-                      diasplazo: 0,
-                      nombrecomercial: "",
-                      saldoFacturas: 0,
-                    });
-                  } else {
-                    let arrAnticipos = [];
-                    if (data.item.pagoanticipado) {
-                      const objBoquilla = (
-                        selectedSurtidor?.boquillas ?? []
-                      ).find(
-                        (x) => x.codigo_boquilla === valorDispensar.boquilla,
-                      );
-                      if (objBoquilla) {
-                        arrAnticipos = (
-                          data.item.pagosanticipados ?? []
-                        ).filter(
-                          (x) =>
-                            x.producto_id === objBoquilla.producto_id &&
-                            x.total > 0,
-                        );
-                        setFacturasAnticipadas(arrAnticipos);
-                      }
-                    }
-
-                    const rawPlacas = data.item?.placas;
-
-                    const strPlacas =
-                      typeof rawPlacas === "string"
-                        ? rawPlacas
-                        : JSON.stringify(rawPlacas);
-
-                    const responseArrPlacas = JSON.parse(strPlacas ?? "[]");
-                    const objPlaca = responseArrPlacas.find(
-                      (x) =>
-                        x.placa.toUpperCase() ===
-                        objHeadBilling.placa.toUpperCase(),
-                    );
-                    let placaHabilitadaCredito = false;
-
-                    if (parametrizacion.validarPlacaForCreditos) {
-                      if (objPlaca && objPlaca.credito) {
-                        placaHabilitadaCredito = true;
-                      }
-                    } else {
-                      placaHabilitadaCredito = true;
-                    }
-
-                    setObjHeadBilling((prevState) => ({
-                      ...prevState,
-                      cliente_codigo: data.item.codigo,
-                      cliente_id: data.item.id,
-                      n_identificacion: data.item.numeroidentificacion,
-                      nombreCliente: data.item.nombrecompleto,
-                      telefono: data.item.telefonocelular ?? "",
-                      direccion: cliente_id
-                        ? prevState.direccion
-                        : (data.item.direccion ?? ""),
-                      correo: cliente_id
-                        ? prevState.correo
-                        : data.item.correopersonal,
-                      placas: data.item.placas,
-                      placa: objHeadBilling.placa,
-                      cupocredito:
-                        !data.item.permitir_orden_venta &&
-                        data.item.cupocredito &&
-                        placaHabilitadaCredito
-                          ? parseFloat(data.item.cupocredito)
-                          : 0,
-                      tipoventa:
-                        !data.item.permitir_orden_venta &&
-                        data.item.cupocredito &&
-                        parseFloat(data.item.cupocredito) > 0 &&
-                        placaHabilitadaCredito
-                          ? "CR"
-                          : "CO",
-                      permitir_orden_venta:
-                        data.item.permitir_orden_venta && placaHabilitadaCredito
-                          ? data.item.permitir_orden_venta
-                          : false,
-                      pagoanticipado:
-                        !data.item.permitir_orden_venta &&
-                        data.item.pagoanticipado &&
-                        placaHabilitadaCredito
-                          ? data.item.pagoanticipado
-                          : false,
-                      arrPagosanticipados: data.item.pagosanticipados ?? [],
-                      facturaanticipo_id:
-                        arrAnticipos.length >= 1
-                          ? arrAnticipos[0].id +
-                            "," +
-                            arrAnticipos[0].tipo_documento
-                          : 0,
-                      resp_permitir_orden_venta: data.item.permitir_orden_venta,
-                      resp_pagoanticipado: data.item.pagoanticipado,
-                      resp_cupocredito: data.item.cupocredito ?? 0,
-                      resp_arrPagosanticipados:
-                        data.item.pagosanticipados ?? [],
-                      saldoFacturas: data.item.saldoFacturas ?? 0,
-                    }));
-                  }
-                } else if (statusData === 203) {
-                  //desbloqueoSurtidor(selectedSurtidor.codigo_transactor); //no descomentar
-                } else if (statusData === 406) {
-                  setSelectedSurtidor(null);
-                  setIsOpenModalPruebasTecnicas(false);
-                  setModalVisible(false);
-                  setRefreshData((prev) => !prev);
-                }
-                setIsLoading(false);
-              })
-              .catch((error) => {
-                let messageError = "";
-                if (error.response?.data) {
-                  if (error.response?.data?.detail) {
-                    messageError = error.response?.data?.detail;
-                  } else if (error.response?.data?.error?.message) {
-                    messageError = error.response?.data?.error?.message;
-                  }
-                }
-                setIsLoading(false);
-                if (messageError.includes("Registro duplicado")) {
-                  setSelectedSurtidor(null);
-                  setIsOpenModalPruebasTecnicas(false);
-                  setModalVisible(false);
-                  setRefreshData((prev) => !prev);
-                } else {
-                  showAlert({
-                    title: "Error",
-                    message: "Error en la consulta: " + messageError,
-                  });
-                }
-              })
-              .finally(() => {
-                if (status === true) {
-                  habilitarRef.current = false;
-                }
-              });
           } else {
             setIsLoading(false);
-            if (status) {
-              showAlert({
-                title: "Información",
-                message: "Perdida de conexion del surtidor con el dispositivo!",
-              });
-            }
-            liberarHabilitar(status);
-            return;
+            showAlert({
+              title: "Información",
+              message:
+                "Debe seleccionar un tipo de combustible para habilitar el dispensador",
+            });
           }
         } else {
           setIsLoading(false);
           showAlert({
             title: "Información",
             message:
-              "Debe seleccionar un tipo de combustible para habilitar el dispensador",
+              "Formato de placa invalida, verifique que tenga ingresado un formato valido",
           });
         }
       } else {
-        setIsLoading(false);
-        showAlert({
-          title: "Información",
-          message:
-            "Formato de placa invalida, verifique que tenga ingresado un formato valido",
-        });
+        if (!status) {
+          showAlert({
+            title: "Información",
+            message: "Debe ingresar una placa valida para poder buscar",
+          });
+        } else {
+          showAlert({
+            title: "Información",
+            message:
+              "Debe ingresar una placa y tener cargado un cliente para poder buscar",
+          });
+        }
       }
-    } else {
-      if (!status) {
-        showAlert({
-          title: "Información",
-          message: "Debe ingresar una placa valida para poder buscar",
-        });
-      } else {
-        showAlert({
-          title: "Información",
-          message:
-            "Debe ingresar una placa y tener cargado un cliente para poder buscar",
-        });
+    } catch (error) {
+      showAlert({
+        title: "Error",
+        message: "Hubo un error",
+      });
+    } finally {
+      if (status === true) {
+        habilitarRef.current = false;
       }
     }
   };
