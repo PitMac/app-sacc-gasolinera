@@ -248,14 +248,15 @@ export default function PagoPinPadComponent(props) {
       plazoDiferido: objDiferido ? (datosPinPad?.meses_id ?? "") : "",
       mesesGracia: "",
       montoTotal: valorTotal,
-      baseImponible: parseFloat(valoresTotalesFactura.subIva).toFixed(2),
-      base0: parseFloat(valoresTotalesFactura.subCero).toFixed(2) ?? 0,
-      iva: parseFloat(valoresTotalesFactura.iva).toFixed(2),
+      baseImponible: parseFloat(valoresTotalesFactura.subIva || 0).toFixed(2),
+      base0: parseFloat(valoresTotalesFactura.subCero || 0).toFixed(2),
+      iva: parseFloat(valoresTotalesFactura.iva || 0).toFixed(2),
       montoFijo: "",
       servicio: "",
       propina:
-        parseFloat(valoresTotalesFactura.propina) > 0 &&
-        parseFloat(valoresTotalesFactura.propina).toFixed(2),
+        parseFloat(valoresTotalesFactura.propina) > 0
+          ? parseFloat(valoresTotalesFactura.propina).toFixed(2)
+          : "",
       hora: new Date().toISOString(),
       fecha: headComprobante.fechaemision + "T00:00:00-05",
       ott: "",
@@ -267,11 +268,22 @@ export default function PagoPinPadComponent(props) {
     };
 
     try {
+      console.log(postDataLocal);
+
       const getDataLocal = await instance.post(
         `${urlapidatos}/processPayment`,
         postDataLocal,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
       );
-      if (getDataLocal.data.status === 200) {
+
+      if (
+        getDataLocal.data.status === 200 ||
+        getDataLocal.data.status === "OK"
+      ) {
         const dataLocal = getDataLocal.data;
         if (
           (dataLocal?.response?.codigoRespuesta ?? "") === "00" &&
@@ -284,10 +296,10 @@ export default function PagoPinPadComponent(props) {
           };
           actions.confirmacionpago(
             dataResponseComplete,
-            selectedDatoAdicional,
+            null,
             listdetallepago,
             valorTotal,
-            selectedDatoAdicional === 0 ? valoresTotalesFactura.propina : 0,
+            valoresTotalesFactura.propina ?? 0,
           );
         } else {
           /* if (((dataLocal?.response?.codigoRespuesta ?? "") === '20') || ((dataLocal?.response?.codigoRespuesta ?? "") === '91') || ((dataLocal?.response?.codigoRespuesta ?? "") === '12') || ((dataLocal?.response?.codigoRespuesta ?? "") === '57')   ){
@@ -315,6 +327,8 @@ export default function PagoPinPadComponent(props) {
           });
         }
       } else {
+        console.log(getDataLocal);
+
         setEstado({
           ...estado,
           tipopago: true,
@@ -335,6 +349,8 @@ export default function PagoPinPadComponent(props) {
         });
       }
     } catch (error) {
+      console.log(error);
+
       setEstado({
         ...estado,
         tipopago: true,

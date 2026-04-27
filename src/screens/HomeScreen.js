@@ -352,44 +352,47 @@ export default function HomeScreen() {
     valorTotal,
     recargo,
   ) => {
-    let bancoObj = bancos.find(
-      (x) => x.valoradicional === response.codigoAdquirente,
-    );
+    try {
+      let bancoObj = bancos.find(
+        (x) => x.valoradicional === response.codigoAdquirente,
+      );
 
-    if (Object.keys(bancoObj).length === 0) {
-      bancoObj = bancos.find(
+      if (Object.keys(bancoObj).length === 0) {
+        bancoObj = bancos.find(
+          (x) =>
+            x.name.toLowerCase() ===
+            (response?.nombreAdquirente ?? "").trim().toLowerCase(),
+        );
+      }
+      const tarjetaObj = tarjetas.find(
         (x) =>
           x.name.toLowerCase() ===
-          (response?.nombreAdquirente ?? "").trim().toLowerCase(),
+          (response?.aplicacionEMV ?? "").trim().toLowerCase(),
       );
+
+      setDetallepagodeuna({
+        tipopago_id: tipoPago.find(
+          (x) => x.id === parametrizacion.pagoOmisionPinPad,
+        ).id,
+        formapago: tipoPago.find(
+          (x) => x.id === parametrizacion.pagoOmisionPinPad,
+        ).name,
+        banco_id: bancoObj?.id,
+        banco: bancoObj?.name,
+        pago: valorTotal,
+        recargo: recargo,
+        referenciavoucher: response.referencia,
+        voucher: response.lote,
+        tarjeta_id: tarjetaObj?.id,
+        tarjeta: tarjetaObj?.descripcion,
+        deuna_response: JSON.stringify(response),
+      });
+
+      setIsOpenModalPagarPinPad(false);
+      setisconfirmado(true);
+    } catch (error) {
+      console.log(error);
     }
-    const tarjetaObj = tarjetas.find(
-      (x) =>
-        x.name.toLowerCase() ===
-        (response?.aplicacionEMV ?? "").trim().toLowerCase(),
-    );
-
-    setDetallepagodeuna({
-      ...defaultDataPago,
-      formapago_id: tipoPago.find(
-        (x) => x.id === parametrizacion.pagoOmisionPinPad,
-      ).id,
-      formapago: tipoPago.find(
-        (x) => x.id === parametrizacionObj.pagoOmisionPinPad,
-      ).name,
-      banco_id: bancoObj?.id,
-      banco: bancoObj?.name,
-      pago: valorTotal,
-      recargo: recargo,
-      referenciavoucher: response.referencia,
-      voucher: response.lote,
-      tarjeta_id: tarjetaObj?.id,
-      tarjeta: tarjetaObj?.descripcion,
-      deuna_response: JSON.stringify(response),
-    });
-
-    setIsOpenModalPagarPinPad(false);
-    setisconfirmado(true);
   };
 
   useFocusEffect(
@@ -1837,7 +1840,7 @@ export default function HomeScreen() {
               : objHeadBilling.telefono,
             generaproforma: status ?? false,
             bodega_id: bodegaId,
-            placas: JSON.stringify(arrPlacas),
+            //placas: JSON.stringify(arrPlacas),
             pago: status ? JSON.stringify(objPago) : "",
             tipoventa: objHeadBilling.tipoventa ?? "CO",
             transaccion_transactor:
@@ -2942,287 +2945,306 @@ export default function HomeScreen() {
   };
 
   const saveFactura = async (objProforma, objSurtidor) => {
-    if (objHeadBilling.autoconsumo && parametrizacion.establecimientoContable) {
+    try {
       if (
-        !objHeadBilling.establecimiento_contable_id ||
-        objHeadBilling.establecimiento_contable_id === 0
-      ) {
-        ToastAndroid.show(
-          "Debe seleccionar un establecimiento contable para autoconsumo",
-          ToastAndroid.SHORT,
-        );
-        return;
-      }
-    }
-
-    const errores = validarCamposPago();
-    if (
-      Object.keys(errores).length > 0 &&
-      !parametrizacion.noValidarCamposPagoTarjeta
-    ) {
-      ToastAndroid.show("Debe rellenar todos los campos", ToastAndroid.SHORT);
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    let surtidorSeleccionado = objSurtidor;
-    const precios = JSON.parse(surtidorSeleccionado.producto.precios);
-    const precioIva = precios[1];
-    const cantidad = surtidorSeleccionado.dolares / precioIva;
-    const consumidorFinal = JSON.parse(parametrizacion.consumidorFinal);
-    if (cantidad > 0) {
-      if (
-        objProforma?.cliente?.id === consumidorFinal.id &&
-        !selectedSurtidor?.proforma?.pruebatecnica
+        objHeadBilling.autoconsumo &&
+        parametrizacion.establecimientoContable
       ) {
         if (
-          parseFloat(valores.dolares) >
-          parseFloat(parametrizacion.valorConsumidorFinal)
+          !objHeadBilling.establecimiento_contable_id ||
+          objHeadBilling.establecimiento_contable_id === 0
         ) {
-          setIsLoading(false);
-          showAlert({
-            title: "Información",
-            message: `Estimado usuario, el valor de la factura no debe ser mayor de $${parseFloat(
-              parametrizacion.valorConsumidorFinal,
-            ).toFixedNew(2)} para consumidor final`,
-          });
-
+          ToastAndroid.show(
+            "Debe seleccionar un establecimiento contable para autoconsumo",
+            ToastAndroid.SHORT,
+          );
           return;
         }
       }
 
+      const errores = validarCamposPago();
       if (
-        objHeadBilling.tipoventa === "CR" &&
-        parametrizacion.isCupoCliente &&
-        objHeadBilling.saldoFacturas < parseFloat(valores.dolares)
+        Object.keys(errores).length > 0 &&
+        !parametrizacion.noValidarCamposPagoTarjeta
       ) {
+        ToastAndroid.show("Debe rellenar todos los campos", ToastAndroid.SHORT);
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      let surtidorSeleccionado = objSurtidor;
+      const precios = JSON.parse(surtidorSeleccionado.producto.precios);
+      const precioIva = precios[1];
+      const cantidad = surtidorSeleccionado.dolares / precioIva;
+      const consumidorFinal = JSON.parse(parametrizacion.consumidorFinal);
+      if (cantidad > 0) {
+        if (
+          objProforma?.cliente?.id === consumidorFinal.id &&
+          !selectedSurtidor?.proforma?.pruebatecnica
+        ) {
+          if (
+            parseFloat(valores.dolares) >
+            parseFloat(parametrizacion.valorConsumidorFinal)
+          ) {
+            setIsLoading(false);
+            showAlert({
+              title: "Información",
+              message: `Estimado usuario, el valor de la factura no debe ser mayor de $${parseFloat(
+                parametrizacion.valorConsumidorFinal,
+              ).toFixedNew(2)} para consumidor final`,
+            });
+
+            return;
+          }
+        }
+
+        if (
+          objHeadBilling.tipoventa === "CR" &&
+          parametrizacion.isCupoCliente &&
+          objHeadBilling.saldoFacturas < parseFloat(valores.dolares)
+        ) {
+          setIsLoading(false);
+          showAlert({
+            title: "Información",
+            message: `Estimado usuario, la cantidad es mayor al cupo con el que cuenta el cliente $${objHeadBilling.saldoFacturas}`,
+          });
+          return;
+        }
+
+        let formapago_id = objHeadBilling.autoconsumo
+          ? parametrizacion?.tipoPagoAutoconsumo?.tipoPagoAutoconsumo
+          : objPago.formapago_id;
+        const banco_id = objPago.banco_id;
+        const numerocuentabancaria = objPago.numerocuentabancaria;
+        const numerodocumentobancario = objPago.numerodocumentobancario;
+        const tarjeta_id = objPago.tarjeta_id;
+        const referenciavoucher = objPago.referenciavoucher;
+        const lotevoucher = objPago.lotevoucher;
+        const fechavencimientopago = objPago.fechavencimiento;
+
+        const valorImpuestoIVA = surtidorSeleccionado.producto.ct_porcentajeiva
+          ? parseFloat(surtidorSeleccionado.producto.ct_porcentajeiva.valor)
+          : porcentajeIVA;
+        const detalletransaccion = [
+          {
+            id: 0,
+            producto_id: surtidorSeleccionado.producto.id,
+            costo: surtidorSeleccionado.producto.impuesto
+              ? precioIva /
+                ((tipoDocumento === "FAC" ? valorImpuestoIVA : 0) / 100 + 1)
+              : precioIva,
+            cantidad: cantidad,
+            bodega_id: bodegaId,
+            impuesto:
+              surtidorSeleccionado.producto.impuesto && tipoDocumento === "FAC"
+                ? valorImpuestoIVA
+                : 0,
+            comentario: "",
+            listaprecio_identificador: "1",
+            porcentaje_descuento: 0,
+            establecimiento_id: objProforma.establecimiento.id,
+            new: true,
+            update: false,
+            delete: false,
+          },
+        ];
+
+        let detallepago = [
+          {
+            id: 0,
+            tipopago_id: formapago_id,
+            valorpago:
+              objHeadBilling.tipoventa === "CR"
+                ? 0
+                : surtidorSeleccionado.dolares,
+            ct_banco: banco_id,
+            valordescuento: 0,
+            retencionfuente: 0,
+            retencioniva: 0,
+            numerocuentabancaria: numerocuentabancaria,
+            numerodocumentobancario: numerodocumentobancario,
+            ct_tarjeta: tarjeta_id,
+            caja_id: objProforma.caja.id,
+            establecimiento_id: objProforma.establecimiento.id,
+            referenciavoucher: referenciavoucher,
+            lotevoucher: lotevoucher,
+            fechaemision: currentDate(),
+            fechavencimiento: fechavencimientopago,
+            usuariovendedor_id: objProforma.usuariovendedor_id,
+            new: true,
+            update: false,
+            delete: false,
+          },
+        ];
+
+        if (isconfirmado) {
+          detallepago[0] = {
+            ...detallepago[0],
+            ...detallepagodeuna,
+          };
+          formapago_id = detallepagodeuna.tipopago_id;
+        }
+
+        const tipopagoObj = tipoPago.find(
+          (x) => x.id === parseInt(formapago_id),
+        );
+        const deshabilitaImpresion = Boolean(
+          tipopagoObj?.deshabilitar_impresion ?? false,
+        );
+        const placas = objProforma.cliente.placas;
+        let arrPlacas =
+          (placas ?? []).length > 0
+            ? (typeof placas === "string" ? JSON.parse(placas) : placas).filter(
+                (x) => x.placa.replace(/[_-]/g, "") !== "",
+              )
+            : [];
+        let existePlaca = arrPlacas.some(
+          (data) =>
+            data.placa.toLowerCase() === objProforma.placa.toLowerCase(),
+        );
+        if (!existePlaca) {
+          arrPlacas.push({
+            codigo: arrPlacas.length + 1,
+            placa: objProforma.placa.toUpperCase(),
+            modelo: "",
+          });
+        }
+
+        const dataComprobante = {
+          establecimiento_sri: establecimientoSRI,
+          puntoemision_sri: puntoEmision,
+          tipo_documento: tipoDocumento,
+          periodofiscal_id,
+          caja_id: objProforma.caja.id,
+          fechaemision: objProforma.fechaemision,
+          fechavencimiento: objProforma.fechavencimiento,
+          establecimiento_id: objProforma.establecimiento.id,
+          usuariovendedor_id: objProforma.usuariovendedor_id,
+          encabezado_transaccion_id: 0,
+          tipoventa: objHeadBilling.tipoventa,
+          observacion: "",
+          cliente: {
+            id: objProforma.cliente.id,
+            direccion: objProforma.cliente.persona.direccion,
+            nombrecomercial: objProforma.cliente.nombrecomercial,
+            telefono: objProforma.cliente.persona.telefonocelular,
+            correo: objProforma.cliente.persona.correopersonal,
+            placas: arrPlacas.filter(
+              (x) => x.placa.replace(/[_-]/g, "") !== "",
+            ),
+          },
+          detalletransaccion,
+          detallepago: detallepago,
+          grupomenu_id: 0,
+          menu_id: menuId,
+          placa: objHeadBilling.placa,
+          surtidor_id: surtidorSeleccionado.id,
+          facturado_gasolina: true,
+          impresiondocumento: false,
+          proformaacumulativo_id: 0,
+          permissCredito: true,
+          tipo_doc_aplica: "",
+          comentario: "",
+          codigomovil: surtidorSeleccionado.transaccion_transactor,
+          isMobile: true,
+          isla_id: turnoActivo?.isla_id ?? 0,
+          asignacionturnoapoyo_id: turnoActivo?.asignacionturnoapoyo_id ?? 0,
+          establecimiento_contable_id:
+            objHeadBilling.establecimiento_contable_id,
+        };
+        instance
+          .put(
+            `api/v1/gasolinera/surtidor/save/comprobante/despacho/${objProforma.id}/${periodofiscal_id}/0/${menuId}`,
+            dataComprobante,
+            config,
+          )
+          .then((resp) => {
+            if (resp.data.status === 202) {
+              setIsLoading(false);
+              if (resp.data.id > 0) {
+                setisconfirmado(false);
+                setEstadodeuna({
+                  ...estadodeuna,
+                  procesando: false,
+                  escaneando: false,
+                  confirmado: false,
+                  enviado: true,
+                  timeout: false,
+                });
+                setEstadoPinPad({
+                  ...estadoPinPad,
+                  procesando: false,
+                  confirmado: false,
+                  enviado: true,
+                  timeout: false,
+                });
+                if (!isDesarrollo) {
+                  desbloqueoSurtidor(
+                    objSurtidor.codigo_transactor.split(",")[0],
+                  );
+                }
+                if (parametrizacion.deshabilitaImpresionDespacho) {
+                  if (
+                    !deshabilitaImpresion ||
+                    objHeadBilling.tipoventa === "CR" ||
+                    objHeadBilling.permitir_orden_venta
+                  ) {
+                    printDocument(resp.data.id, resp.data.tipo_documento);
+                  } else {
+                    setSelectedSurtidor(null);
+                    setValores({
+                      dolares: 0,
+                      galones: 0,
+                      estado_transactor: "",
+                    });
+                    resetData();
+                    setRefreshData((prev) => !prev);
+                  }
+                } else {
+                  printDocument(resp.data.id, resp.data.tipo_documento);
+                }
+                toggleModal();
+              } else {
+                setIsLoading(false);
+                showAlert({
+                  title: "Información",
+                  message: "La Factura no pudo ser generada",
+                });
+              }
+            } else if (resp.data.status === 200) {
+              setIsLoading(false);
+              setRefreshData((prev) => !prev);
+            }
+          })
+          .catch((error) => {
+            let messageError = "";
+            if (error.response.data) {
+              if (error.response.data.detail) {
+                messageError = error.response.data.detail;
+              } else if (error.response.data.error.message) {
+                messageError = error.response.data.error.message;
+              }
+            }
+            setIsLoading(false);
+            showAlert({
+              title: "Error",
+              message: "No se puede generar factura: " + messageError,
+            });
+          })
+          .finally(() => {
+            sendingRef.current = false;
+            setIsLoading(false);
+          });
+      } else {
         setIsLoading(false);
         showAlert({
           title: "Información",
-          message: `Estimado usuario, la cantidad es mayor al cupo con el que cuenta el cliente $${objHeadBilling.saldoFacturas}`,
-        });
-        return;
-      }
-
-      const formapago_id = objHeadBilling.autoconsumo
-        ? parametrizacion?.tipoPagoAutoconsumo?.tipoPagoAutoconsumo
-        : objPago.formapago_id;
-      const banco_id = objPago.banco_id;
-      const numerocuentabancaria = objPago.numerocuentabancaria;
-      const numerodocumentobancario = objPago.numerodocumentobancario;
-      const tarjeta_id = objPago.tarjeta_id;
-      const referenciavoucher = objPago.referenciavoucher;
-      const lotevoucher = objPago.lotevoucher;
-      const fechavencimientopago = objPago.fechavencimiento;
-
-      const valorImpuestoIVA = surtidorSeleccionado.producto.ct_porcentajeiva
-        ? parseFloat(surtidorSeleccionado.producto.ct_porcentajeiva.valor)
-        : porcentajeIVA;
-      const detalletransaccion = [
-        {
-          id: 0,
-          producto_id: surtidorSeleccionado.producto.id,
-          costo: surtidorSeleccionado.producto.impuesto
-            ? precioIva /
-              ((tipoDocumento === "FAC" ? valorImpuestoIVA : 0) / 100 + 1)
-            : precioIva,
-          cantidad: cantidad,
-          bodega_id: bodegaId,
-          impuesto:
-            surtidorSeleccionado.producto.impuesto && tipoDocumento === "FAC"
-              ? valorImpuestoIVA
-              : 0,
-          comentario: "",
-          listaprecio_identificador: "1",
-          porcentaje_descuento: 0,
-          establecimiento_id: objProforma.establecimiento.id,
-          new: true,
-          update: false,
-          delete: false,
-        },
-      ];
-
-      let detallepago = [
-        {
-          id: 0,
-          tipopago_id: formapago_id,
-          valorpago:
-            objHeadBilling.tipoventa === "CR"
-              ? 0
-              : surtidorSeleccionado.dolares,
-          ct_banco: banco_id,
-          valordescuento: 0,
-          retencionfuente: 0,
-          retencioniva: 0,
-          numerocuentabancaria: numerocuentabancaria,
-          numerodocumentobancario: numerodocumentobancario,
-          ct_tarjeta: tarjeta_id,
-          caja_id: objProforma.caja.id,
-          establecimiento_id: objProforma.establecimiento.id,
-          referenciavoucher: referenciavoucher,
-          lotevoucher: lotevoucher,
-          fechaemision: currentDate(),
-          fechavencimiento: fechavencimientopago,
-          usuariovendedor_id: objProforma.usuariovendedor_id,
-          new: true,
-          update: false,
-          delete: false,
-        },
-      ];
-
-      if (isconfirmado) {
-        detallepago[0] = {
-          ...detallepago[0],
-          ...detallepagodeuna,
-        };
-        formapago_id = detallepagodeuna.tipopago_id;
-      }
-
-      const tipopagoObj = tipoPago.find((x) => x.id === parseInt(formapago_id));
-      const deshabilitaImpresion = Boolean(
-        tipopagoObj?.deshabilitar_impresion ?? false,
-      );
-      const placas = objProforma.cliente.placas;
-      let arrPlacas =
-        (placas ?? []).length > 0
-          ? (typeof placas === "string" ? JSON.parse(placas) : placas).filter(
-              (x) => x.placa.replace(/[_-]/g, "") !== "",
-            )
-          : [];
-      let existePlaca = arrPlacas.some(
-        (data) => data.placa.toLowerCase() === objProforma.placa.toLowerCase(),
-      );
-      if (!existePlaca) {
-        arrPlacas.push({
-          codigo: arrPlacas.length + 1,
-          placa: objProforma.placa.toUpperCase(),
-          modelo: "",
+          message:
+            "Estimado usuario debe ingresar una cantidad mayor a 0 parea guardar la venta",
         });
       }
-
-      const dataComprobante = {
-        establecimiento_sri: establecimientoSRI,
-        puntoemision_sri: puntoEmision,
-        tipo_documento: tipoDocumento,
-        periodofiscal_id,
-        caja_id: objProforma.caja.id,
-        fechaemision: objProforma.fechaemision,
-        fechavencimiento: objProforma.fechavencimiento,
-        establecimiento_id: objProforma.establecimiento.id,
-        usuariovendedor_id: objProforma.usuariovendedor_id,
-        encabezado_transaccion_id: 0,
-        tipoventa: objHeadBilling.tipoventa,
-        observacion: "",
-        cliente: {
-          id: objProforma.cliente.id,
-          direccion: objProforma.cliente.persona.direccion,
-          nombrecomercial: objProforma.cliente.nombrecomercial,
-          telefono: objProforma.cliente.persona.telefonocelular,
-          correo: objProforma.cliente.persona.correopersonal,
-          placas: arrPlacas.filter((x) => x.placa.replace(/[_-]/g, "") !== ""),
-        },
-        detalletransaccion,
-        detallepago: detallepago,
-        grupomenu_id: 0,
-        menu_id: menuId,
-        placa: objHeadBilling.placa,
-        surtidor_id: surtidorSeleccionado.id,
-        facturado_gasolina: true,
-        impresiondocumento: false,
-        proformaacumulativo_id: 0,
-        permissCredito: true,
-        tipo_doc_aplica: "",
-        comentario: "",
-        codigomovil: surtidorSeleccionado.transaccion_transactor,
-        isMobile: true,
-        isla_id: turnoActivo?.isla_id ?? 0,
-        asignacionturnoapoyo_id: turnoActivo?.asignacionturnoapoyo_id ?? 0,
-        establecimiento_contable_id: objHeadBilling.establecimiento_contable_id,
-      };
-      instance
-        .put(
-          `api/v1/gasolinera/surtidor/save/comprobante/despacho/${objProforma.id}/${periodofiscal_id}/0/${menuId}`,
-          dataComprobante,
-          config,
-        )
-        .then((resp) => {
-          if (resp.data.status === 202) {
-            setIsLoading(false);
-            if (resp.data.id > 0) {
-              setisconfirmado(false);
-              setEstadodeuna({
-                ...estadodeuna,
-                procesando: false,
-                escaneando: false,
-                confirmado: false,
-                enviado: true,
-                timeout: false,
-              });
-              setEstadoPinPad({
-                ...estadoPinPad,
-                procesando: false,
-                confirmado: false,
-                enviado: true,
-                timeout: false,
-              });
-              if (!isDesarrollo) {
-                desbloqueoSurtidor(objSurtidor.codigo_transactor.split(",")[0]);
-              }
-              if (parametrizacion.deshabilitaImpresionDespacho) {
-                if (
-                  !deshabilitaImpresion ||
-                  objHeadBilling.tipoventa === "CR" ||
-                  objHeadBilling.permitir_orden_venta
-                ) {
-                  printDocument(resp.data.id, resp.data.tipo_documento);
-                } else {
-                  setSelectedSurtidor(null);
-                  setValores({ dolares: 0, galones: 0, estado_transactor: "" });
-                  resetData();
-                  setRefreshData((prev) => !prev);
-                }
-              } else {
-                printDocument(resp.data.id, resp.data.tipo_documento);
-              }
-              toggleModal();
-            } else {
-              setIsLoading(false);
-              showAlert({
-                title: "Información",
-                message: "La Factura no pudo ser generada",
-              });
-            }
-          } else if (resp.data.status === 200) {
-            setIsLoading(false);
-            setRefreshData((prev) => !prev);
-          }
-        })
-        .catch((error) => {
-          let messageError = "";
-          if (error.response.data) {
-            if (error.response.data.detail) {
-              messageError = error.response.data.detail;
-            } else if (error.response.data.error.message) {
-              messageError = error.response.data.error.message;
-            }
-          }
-          setIsLoading(false);
-          showAlert({
-            title: "Error",
-            message: "No se puede generar factura: " + messageError,
-          });
-        })
-        .finally(() => {
-          sendingRef.current = false;
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-      showAlert({
-        title: "Información",
-        message:
-          "Estimado usuario debe ingresar una cantidad mayor a 0 parea guardar la venta",
-      });
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -3804,12 +3826,62 @@ export default function HomeScreen() {
   };
 
   const renderModalPagarPinPad = () => {
+    if (!selectedSurtidor || !arrDataTransactorSurtidores.length) {
+      return null;
+    }
+
+    const objTransactor = arrDataTransactorSurtidores.find(
+      (data) =>
+        data.estado_transactor === "Ci" &&
+        data.codigofila_transactor === selectedSurtidor?.codigo_transactor,
+    );
+
+    if (!objTransactor) return null;
+
+    const arrSurtidorFacturar = arrsurtidores.filter(
+      (x) => x.codigo_transactor.split(",")[0] === objTransactor[0],
+    );
+
+    const objSurtidor = arrSurtidorFacturar.find(
+      (surt) =>
+        surt.codigo_transactor === objTransactor[0] + "," + objTransactor[8],
+    );
+
+    let surtidorSeleccionado = objSurtidor;
+
+    const valorImpuestoIVA = surtidorSeleccionado?.producto?.ct_porcentajeiva
+      ? parseFloat(surtidorSeleccionado.producto.ct_porcentajeiva.valor)
+      : porcentajeIVA || 15;
+
+    const subtotalIva = parseFloat(
+      parseFloat(objTransactor[4]).toFixed(2) || 0,
+    );
+
+    const porcentaje = (valorImpuestoIVA || 0) / 100;
+
+    const baseImponibleCalculada = surtidorSeleccionado?.producto?.impuesto
+      ? subtotalIva / (1 + porcentaje)
+      : 0;
+
+    const ivaCalculado = surtidorSeleccionado?.producto?.impuesto
+      ? subtotalIva - baseImponibleCalculada
+      : 0;
+
+    const base0Calculada = !surtidorSeleccionado?.producto?.impuesto
+      ? subtotalIva
+      : 0;
+
+    const total = selectedSurtidor?.proforma
+      ? parseFloat(valores?.dolares || 0)
+      : parseFloat(valorDispensar?.dolares || 0);
+
     return (
       <PagoPinPadComponent
         valoresTotalesFactura={{
-          total: selectedSurtidor?.proforma
-            ? parseFloat(valores.dolares)
-            : parseFloat(valorDispensar.dolares),
+          total: total,
+          subIva: baseImponibleCalculada,
+          subCero: base0Calculada,
+          iva: ivaCalculado,
           propina: 0,
         }}
         headComprobante={objHeadBilling}

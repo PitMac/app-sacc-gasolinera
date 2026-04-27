@@ -301,9 +301,10 @@ export default function LoginScreen() {
               <Image
                 source={require("../../assets/images/logo_gasolinera.png")}
                 style={{
-                  height: 300,
+                  height: 250,
                   marginBottom: 20,
-                  width: 500,
+                  marginTop: 10,
+                  width: 400,
                   resizeMode: "contain",
                 }}
               />
