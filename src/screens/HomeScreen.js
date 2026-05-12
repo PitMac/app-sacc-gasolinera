@@ -234,6 +234,7 @@ export default function HomeScreen() {
     establecimiento_contable_id: 0,
     autoconsumo: false,
     saldoFacturas: 0,
+    valorAnticipo: 0,
   });
   const [isEditData, setEditData] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -1041,6 +1042,7 @@ export default function HomeScreen() {
       facturaanticipo_id: 0,
       pruebatecnica: false,
       saldoFacturas: 0,
+      valorAnticipo: 0,
     });
   };
 
@@ -1061,7 +1063,10 @@ export default function HomeScreen() {
   const selectBoquilla = (item) => {
     if (objHeadBilling.cliente_id > 0) {
       setValorDispensar({ ...valorDispensar, boquilla: item.codigo_boquilla });
-      if (objHeadBilling.pagoanticipado) {
+      if (
+        objHeadBilling.pagoanticipado &&
+        !parametrizacion.facturasAnticipadasAnticipo
+      ) {
         const arrAnticipos = (objHeadBilling.arrPagosanticipados ?? []).filter(
           (x) => x.producto_id === item.producto_id,
         );
@@ -1134,6 +1139,40 @@ export default function HomeScreen() {
         title: "Error",
         message: "No hay url para impresion configurada",
       });
+    }
+  };
+
+  const validateDocumentoBancario = async (
+    currentBancoId,
+    currentDocumento,
+  ) => {
+    if (currentBancoId && currentBancoId > 0 && currentDocumento !== "") {
+      try {
+        const resp = await instance.get(
+          `api/v1/cartera/detallepagotransaccion/validadocumento/${periodofiscal_id}/${currentDocumento}/${currentBancoId}`,
+        );
+        if (resp.data.status === 200 && resp.data.valid_documento !== 0) {
+          const dataRepeatNDocument = resp.data.valid_documento;
+
+          const nombresDocs = {
+            FAC: "la Factura",
+            NVT: "Otras Facturas",
+            ANC: "el Anticipo",
+          };
+          const tipoDocNombre =
+            nombresDocs[dataRepeatNDocument.tipo_doc] || "el Asiento Inicial";
+          const respuesta = await showModal({
+            title: "Información",
+            content: `Estimado usuario, el numero de documento se encuentra ingresado en ${tipoDocNombre}, con número de transaccion ${dataRepeatNDocument.encabezado_transaccion_id}`,
+          });
+
+          if (parametrizacion.noRegistrarMismoComprobante) {
+            setObjPago((prev) => ({ ...prev, numerodocumentobancario: "" }));
+          }
+        }
+      } catch (err) {
+        console.error("Error validando documento:", err);
+      }
     }
   };
 
@@ -1369,6 +1408,11 @@ export default function HomeScreen() {
               resp_arrPagosanticipados: cliente.pagosanticipados ?? [],
               establecimiento_contable_id: establecimiento_contable,
               saldoFacturas: dataProforma.saldoFacturas ?? 0,
+              valorAnticipo:
+                cliente.pagoanticipado &&
+                parametrizacion.facturasAnticipadasAnticipo
+                  ? dataProforma.pagoanticipado
+                  : 0,
             });
 
             if (detallePagoAcumulativo && detallePagoAcumulativo.length > 0) {
@@ -1476,7 +1520,10 @@ export default function HomeScreen() {
                 });
 
               let arrAnticipos = [];
-              if (itemSupplier.pagoanticipado) {
+              if (
+                itemSupplier.pagoanticipado &&
+                !parametrizacion.facturasAnticipadasAnticipo
+              ) {
                 const objBoquilla = (selectedSurtidor?.boquillas ?? []).find(
                   (x) => x.codigo_boquilla === valorDispensar.boquilla,
                 );
@@ -1537,6 +1584,11 @@ export default function HomeScreen() {
                 resp_cupocredito: itemSupplier.cupocredito ?? 0,
                 resp_arrPagosanticipados: resp.data.pagosanticipados ?? [],
                 saldoFacturas: itemSupplier.saldoFacturas ?? 0,
+                valorAnticipo:
+                  itemSupplier.pagoanticipado &&
+                  parametrizacion.facturasAnticipadasAnticipo
+                    ? data.pagosanticipados
+                    : 0,
               });
               ToastAndroid.show("Cliente Encontrado", ToastAndroid.SHORT);
               if (selectedSurtidor?.proforma) {
@@ -1624,7 +1676,11 @@ export default function HomeScreen() {
             });
           }
           let valorAnticipo = null;
-          if (status && objHeadBilling.pagoanticipado) {
+          if (
+            status &&
+            objHeadBilling.pagoanticipado &&
+            !parametrizacion.facturasAnticipadasAnticipo
+          ) {
             if (
               objHeadBilling.facturaanticipo_id !== "" &&
               parseInt(objHeadBilling.facturaanticipo_id) > 0
@@ -1716,6 +1772,27 @@ export default function HomeScreen() {
               });
               liberarHabilitar(status);
               return;
+            }
+          } else if (
+            status &&
+            objHeadBilling.pagoanticipado &&
+            parametrizacion.facturasAnticipadasAnticipo
+          ) {
+            if (parseFloat(valorDispensar.dolares) > 0) {
+              if (
+                parseFloat(valorDispensar.dolares) >
+                parseFloat(objHeadBilling.valorAnticipo)
+              ) {
+                setIsLoading(false);
+                showAlert({
+                  title: "Información",
+                  message:
+                    "Estimado usuario, El valor de dolares ingresado supera al valor del saldo disponible, saldo disponible: $" +
+                    objHeadBilling.valorAnticipo,
+                });
+                liberarHabilitar(status);
+                return;
+              }
             }
           } else if (
             status &&
@@ -1915,7 +1992,10 @@ export default function HomeScreen() {
                     });
                   } else {
                     let arrAnticipos = [];
-                    if (data.item.pagoanticipado) {
+                    if (
+                      data.item.pagoanticipado &&
+                      !parametrizacion.facturasAnticipadasAnticipo
+                    ) {
                       const objBoquilla = (
                         selectedSurtidor?.boquillas ?? []
                       ).find(
@@ -2007,6 +2087,11 @@ export default function HomeScreen() {
                       resp_arrPagosanticipados:
                         data.item.pagosanticipados ?? [],
                       saldoFacturas: data.item.saldoFacturas ?? 0,
+                      valorAnticipo:
+                        data.item.pagoanticipado &&
+                        parametrizacion.facturasAnticipadasAnticipo
+                          ? data.item.pagosanticipados
+                          : 0,
                     }));
                   }
                 } else if (statusData === 203) {
@@ -2119,7 +2204,10 @@ export default function HomeScreen() {
                 });
 
               let arrAnticipos = [];
-              if (itemSupplier.pagoanticipado) {
+              if (
+                itemSupplier.pagoanticipado &&
+                !parametrizacion.facturasAnticipadasAnticipo
+              ) {
                 const objBoquilla = (selectedSurtidor?.boquillas ?? []).find(
                   (x) => x.codigo_boquilla === valorDispensar.boquilla,
                 );
@@ -2181,6 +2269,11 @@ export default function HomeScreen() {
                 resp_cupocredito: itemSupplier.cupocredito ?? 0,
                 resp_arrPagosanticipados: resp.data.pagosanticipados ?? [],
                 saldoFacturas: itemSupplier.saldoFacturas ?? 0,
+                valorAnticipo:
+                  itemSupplier.pagoanticipado &&
+                  parametrizacion.facturasAnticipadasAnticipo
+                    ? itemSupplier.pagosanticipados
+                    : 0,
               }));
               ToastAndroid.show("Cliente Encontrado", ToastAndroid.SHORT);
               if (selectedSurtidor?.proforma) {
@@ -3151,6 +3244,9 @@ export default function HomeScreen() {
           asignacionturnoapoyo_id: turnoActivo?.asignacionturnoapoyo_id ?? 0,
           establecimiento_contable_id:
             objHeadBilling.establecimiento_contable_id,
+          valorAnticipo: objHeadBilling.pagoanticipado
+            ? objHeadBilling.valorAnticipo
+            : 0,
         };
         instance
           .put(
@@ -3486,6 +3582,9 @@ export default function HomeScreen() {
           asignacionturno_id: turnoActivo.asignacionturno_id ?? 0,
           pruebatecnica: false,
           isMobile: true,
+          valorAnticipo: objHeadBilling.pagoanticipado
+            ? objHeadBilling.valorAnticipo
+            : 0,
         };
         const data = await instance.post(
           `api/v1/gasolinera/surtidor/save/habilitarprimero/despacho/${periodofiscal_id}/0/${menuId}`,
@@ -3708,6 +3807,7 @@ export default function HomeScreen() {
         findEstadoSelectedSurtidor={findEstadoSelectedSurtidor}
         openPagarDeunaModal={openPagarDeunaModal}
         openPagarPinPadModal={openPagarPinPadModal}
+        validateDocumentoBancario={validateDocumentoBancario}
       />
     );
   };

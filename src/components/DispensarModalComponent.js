@@ -74,6 +74,7 @@ function DispensarModalComponent(props) {
     findEstadoSelectedSurtidor,
     openPagarDeunaModal,
     openPagarPinPadModal,
+    validateDocumentoBancario,
   } = props;
 
   return (
@@ -149,7 +150,7 @@ function DispensarModalComponent(props) {
             )}
             <View style={styles.placaRow}>
               <TextInput
-                style={{ flex: 1 }}
+                style={{ flex: 1, backgroundColor: "white" }}
                 label="Placa"
                 editable={!selectedSurtidor?.isFacturaAnticipo}
                 error={error !== ""}
@@ -266,7 +267,7 @@ function DispensarModalComponent(props) {
             </View>
             <View style={styles.container}>
               <TextInput
-                style={{ width: "40%" }}
+                style={{ width: "40%", backgroundColor: "white" }}
                 label="Codigo"
                 editable={!selectedSurtidor?.isFacturaAnticipo}
                 keyboardType={"numeric"}
@@ -297,7 +298,7 @@ function DispensarModalComponent(props) {
               />
               <View style={{ width: 5 }} />
               <TextInput
-                style={{ flex: 1 }}
+                style={{ flex: 1, backgroundColor: "white" }}
                 label="RUC"
                 editable={!selectedSurtidor?.isFacturaAnticipo}
                 returnKeyType="search"
@@ -341,7 +342,7 @@ function DispensarModalComponent(props) {
               >
                 <TextInput
                   readOnly={true}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, backgroundColor: "white" }}
                   label="Cliente"
                   mode={"outlined"}
                   value={objHeadBilling.nombreCliente}
@@ -350,7 +351,7 @@ function DispensarModalComponent(props) {
             </Pressable>
             <View style={styles.container}>
               <TextInput
-                style={{ flex: 1 }}
+                style={{ flex: 1, backgroundColor: "white" }}
                 label="Direccion"
                 mode={"outlined"}
                 value={objHeadBilling.direccion}
@@ -359,7 +360,7 @@ function DispensarModalComponent(props) {
             </View>
             <View style={styles.container}>
               <TextInput
-                style={{ flex: 1 }}
+                style={{ flex: 1, backgroundColor: "white" }}
                 label="Correo"
                 keyboardType={"email-address"}
                 mode={"outlined"}
@@ -463,59 +464,68 @@ function DispensarModalComponent(props) {
                 />
               </View>
             </View>
-            {selectedSurtidor && !selectedSurtidor.proforma && (
-              <View style={{ marginTop: 10 }}>
-                {objHeadBilling.arrPagosanticipados.length > 0 && (
-                  <View>
-                    <CustomCheckBox
-                      title={"Pago Anticipado"}
-                      checked={objHeadBilling.pagoanticipado}
-                      onPress={() =>
-                        setObjHeadBilling((prev) => ({
-                          ...prev,
-                          pagoanticipado: !prev.pagoanticipado,
-                        }))
-                      }
-                    />
-                    {objHeadBilling.pagoanticipado &&
-                      valorDispensar.boquilla !== "" && (
-                        <View style={{ alignItems: "flex-start" }}>
-                          <Text>Anticipo</Text>
-                          <CustomPicker
-                            selectedValue={objHeadBilling.facturaanticipo_id}
-                            onValueChange={(itemValue) =>
-                              createChangeHandler(
-                                "facturaanticipo_id",
-                                itemValue,
-                              )
-                            }
-                            text={(() => {
-                              const factura = facturasAnticipadas.find(
-                                (item) =>
-                                  item.id + "," + item.tipo_documento ===
-                                  objHeadBilling.facturaanticipo_id,
-                              );
-                              return factura ? factura.total : "";
-                            })()}
-                            items={facturasAnticipadas.map((item) => ({
-                              label: item.total,
-                              value: item.id + "," + item.tipo_documento,
-                            }))}
-                          />
-                        </View>
-                      )}
-                  </View>
-                )}
-                {!(
-                  findEstadoSelectedSurtidor() === "FACTURAR" &&
-                  parametrizacion.habilitarPrimeroyFacturar
-                ) && (
-                  <Button mode="contained" onPress={() => searchPlaca(true)}>
-                    Habilitar Dispensador
-                  </Button>
-                )}
-              </View>
-            )}
+            {selectedSurtidor &&
+              (!selectedSurtidor.proforma ||
+                parametrizacion.facturasAnticipadasAnticipo) && (
+                <View style={{ marginTop: 10 }}>
+                  {objHeadBilling.arrPagosanticipados.length > 0 && (
+                    <View>
+                      <CustomCheckBox
+                        title={"Pago Anticipado"}
+                        checked={objHeadBilling.pagoanticipado}
+                        onPress={() =>
+                          setObjHeadBilling((prev) => ({
+                            ...prev,
+                            pagoanticipado: !prev.pagoanticipado,
+                          }))
+                        }
+                      />
+                      {objHeadBilling.pagoanticipado &&
+                        valorDispensar.boquilla !== "" &&
+                        !parametrizacion.facturasAnticipadasAnticipo && (
+                          <View style={{ alignItems: "flex-start" }}>
+                            <Text>Anticipo</Text>
+                            <CustomPicker
+                              selectedValue={objHeadBilling.facturaanticipo_id}
+                              onValueChange={(itemValue) =>
+                                createChangeHandler(
+                                  "facturaanticipo_id",
+                                  itemValue,
+                                )
+                              }
+                              text={(() => {
+                                const factura = facturasAnticipadas.find(
+                                  (item) =>
+                                    item.id + "," + item.tipo_documento ===
+                                    objHeadBilling.facturaanticipo_id,
+                                );
+                                return factura ? factura.total : "";
+                              })()}
+                              items={facturasAnticipadas.map((item) => ({
+                                label: item.total,
+                                value: item.id + "," + item.tipo_documento,
+                              }))}
+                            />
+                          </View>
+                        )}
+                      <Text
+                        style={{ color: Colors.primary, fontWeight: "bold" }}
+                      >
+                        SALDO DISPONIBLE: $
+                        {objHeadBilling.valorAnticipo.toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+                  {!(
+                    findEstadoSelectedSurtidor() === "FACTURAR" &&
+                    parametrizacion.habilitarPrimeroyFacturar
+                  ) && (
+                    <Button mode="contained" onPress={() => searchPlaca(true)}>
+                      Habilitar Dispensador
+                    </Button>
+                  )}
+                </View>
+              )}
             {parametrizacion.habilitarPrimeroyFacturar &&
               selectedSurtidor &&
               !selectedSurtidor.proforma &&
@@ -567,7 +577,12 @@ function DispensarModalComponent(props) {
                 !selectedSurtidor?.proforma?.pruebatecnica) ||
                 (parametrizacion.habilitarPrimeroyFacturar &&
                   !selectedSurtidor.proforma &&
-                  findEstadoSelectedSurtidor() === "FACTURAR")) && (
+                  findEstadoSelectedSurtidor() === "FACTURAR" &&
+                  !(
+                    parametrizacion.facturasAnticipadasAnticipo &&
+                    objHeadBilling.pagoanticipado &&
+                    objHeadBilling.valorAnticipo > 0
+                  ))) && (
                 <>
                   {!objHeadBilling.autoconsumo && (
                     <>
@@ -654,7 +669,7 @@ function DispensarModalComponent(props) {
                             text={
                               selectedEstablecimientoContable?.nombreEstablecimiento
                                 ? selectedEstablecimientoContable?.nombreEstablecimiento?.toUpperCase()
-                                : "SELECCIONE UN BANCO"
+                                : "SELECCIONE UN ESTABLECIMIENTO"
                             }
                             selectedValue={objPago.establecimiento_contable_id}
                             onValueChange={(itemValue, itemIndex) =>
@@ -704,13 +719,18 @@ function DispensarModalComponent(props) {
                                   : "SELECCIONE UN BANCO"
                               }
                               selectedValue={objPago.banco_id}
-                              onValueChange={(itemValue, itemIndex) =>
+                              onValueChange={(itemValue, itemIndex) => {
                                 createChangeHandlerPago(
                                   "banco_id",
                                   itemValue,
                                   itemIndex,
-                                )
-                              }
+                                );
+
+                                validateDocumentoBancario(
+                                  itemValue,
+                                  objPago.numerodocumentobancario,
+                                );
+                              }}
                               items={bancos.map((item) => ({
                                 label: item.name,
                                 value: item.id,
@@ -722,7 +742,7 @@ function DispensarModalComponent(props) {
                           <>
                             <View style={{ height: 60 }}>
                               <TextInput
-                                style={{ flex: 1 }}
+                                style={{ flex: 1, backgroundColor: "white" }}
                                 label="# Documento"
                                 mode={"outlined"}
                                 value={objPago.numerodocumentobancario}
@@ -730,6 +750,12 @@ function DispensarModalComponent(props) {
                                   createChangeHandlerPago(
                                     "numerodocumentobancario",
                                     text,
+                                  )
+                                }
+                                onBlur={() =>
+                                  validateDocumentoBancario(
+                                    objPago.banco_id,
+                                    objPago.numerodocumentobancario,
                                   )
                                 }
                               />
@@ -777,13 +803,13 @@ function DispensarModalComponent(props) {
                             <View>
                               <View style={{ height: 60 }}>
                                 <TextInput
-                                  style={{ flex: 1 }}
+                                  style={{ flex: 1, backgroundColor: "white" }}
                                   label="# Cuenta"
                                   mode={"outlined"}
-                                  value={objPago.numerodocumentobancario}
+                                  value={objPago.numerocuentabancaria}
                                   onChangeText={(text) =>
                                     createChangeHandlerPago(
-                                      "numerodocumentobancario",
+                                      "numerocuentabancaria",
                                       text,
                                     )
                                   }
@@ -795,7 +821,7 @@ function DispensarModalComponent(props) {
                             <View>
                               <View style={{ height: 60 }}>
                                 <TextInput
-                                  style={{ flex: 1 }}
+                                  style={{ flex: 1, backgroundColor: "white" }}
                                   label="Voucher"
                                   keyboardType={"numeric"}
                                   mode={"outlined"}
@@ -807,7 +833,7 @@ function DispensarModalComponent(props) {
                               </View>
                               <View style={{ height: 60 }}>
                                 <TextInput
-                                  style={{ flex: 1 }}
+                                  style={{ flex: 1, backgroundColor: "white" }}
                                   label="Ref.Voucher"
                                   mode={"outlined"}
                                   keyboardType={"numeric"}

@@ -23,6 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { showAlert } from "../components/CustomAlert";
 import { Colors } from "../utils/Colors";
 import { Image } from "expo-image";
+import GlobalIcon from "../components/GlobalIcon";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -198,7 +199,7 @@ export default function LoginScreen() {
   const openSelectPeriodoFiscal = () => {
     return (
       <View
-        style={{ backgroundColor: "#d6d9da", width: "90%", borderRadius: 20 }}
+        style={{ backgroundColor: "#F5F7F8", width: "90%", borderRadius: 20 }}
       >
         <View
           style={{
@@ -214,58 +215,64 @@ export default function LoginScreen() {
             SELECCIONE UN PERIODO FISCAL
           </Text>
         </View>
-        {Object.keys(groupedData).map((key) => {
-          return (
-            <View
-              key={key}
-              style={{
-                margin: 10,
-                backgroundColor: "#fff",
-                borderRadius: 10,
-                padding: 10,
-              }}
-            >
-              <Text
+        <View style={{ marginVertical: 10 }}>
+          {Object.keys(groupedData).map((key, index) => {
+            const isFirst = index === 0;
+            const isLast = index === Object.keys(groupedData).length - 1;
+            return (
+              <View
+                key={key + index}
                 style={{
-                  fontWeight: "bold",
-                  color: Colors.primary,
-                  fontSize: 15,
+                  borderTopLeftRadius: isFirst ? 18 : 0,
+                  borderTopRightRadius: isFirst ? 18 : 0,
+                  borderBottomLeftRadius: isLast ? 18 : 0,
+                  borderBottomRightRadius: isLast ? 18 : 0,
+                  marginHorizontal: 10,
+                  backgroundColor: "#fff",
+                  padding: 10,
                 }}
               >
-                &bull; {key}
-              </Text>
-              <View>
-                {groupedData[key].map((item, index) => {
-                  return (
-                    <Pressable
-                      key={index}
-                      onPress={() => {
-                        setIsOpenPeriodoFiscal(false);
-                        loginDatosMaestros(item.id, usuario);
-                      }}
-                      style={({ pressed }) => ({
-                        padding: 10,
-                        paddingVertical: 15,
-                        flexDirection: "row",
-                        backgroundColor: "#fff",
-                        alignItems: "center",
-                        opacity: pressed ? 0.5 : 1,
-                      })}
-                    >
-                      <Ionicons
-                        name="arrow-forward-outline"
-                        size={20}
-                        color="#666"
-                        style={{ marginRight: 5 }}
-                      />
-                      <Text>{item.nombre}</Text>
-                    </Pressable>
-                  );
-                })}
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    color: Colors.primary,
+                    fontSize: 15,
+                  }}
+                >
+                  &bull; {key}
+                </Text>
+                <View>
+                  {groupedData[key].map((item, index) => {
+                    return (
+                      <Pressable
+                        onPress={() => {
+                          setIsOpenPeriodoFiscal(false);
+                          loginDatosMaestros(item.id, usuario);
+                        }}
+                        style={({ pressed }) => ({
+                          padding: 10,
+                          paddingVertical: 15,
+                          flexDirection: "row",
+                          backgroundColor: "#fff",
+                          alignItems: "center",
+                          opacity: pressed ? 0.5 : 1,
+                        })}
+                      >
+                        <GlobalIcon
+                          name="checkmark-circle"
+                          size={20}
+                          family="ion"
+                          color={Colors.primary}
+                        />
+                        <Text>{item.nombre}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
-            </View>
-          );
-        })}
+            );
+          })}
+        </View>
       </View>
     );
   };

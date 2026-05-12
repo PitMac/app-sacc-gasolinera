@@ -1,6 +1,7 @@
 import React from "react";
 import { Modal, View, Text, Pressable } from "react-native";
 import { useModalStore } from "../stores/ModalStore";
+import { Colors } from "../utils/Colors";
 
 const ModalOption = () => {
   const { modalProps, hideModal } = useModalStore();
@@ -60,27 +61,32 @@ const ModalOption = () => {
             <Pressable
               onPress={() => hideModal(false)}
               style={({ pressed }) => ({
+                backgroundColor: "white",
                 opacity: pressed ? 0.5 : 1,
               })}
             >
-              <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Cancelar</Text>
+              <Text style={{ fontSize: 15 }}>Cancelar</Text>
             </Pressable>
             <Pressable
               onPress={() => hideModal(true)}
               style={({ pressed }) => ({
+                backgroundColor: "white",
                 opacity: pressed ? 0.5 : 1,
               })}
             >
-              <Text style={{ fontWeight: 'bold', color: '#d5a203', fontSize: 16 }}>
+              <Text
+                style={{
+                  color: Colors.primary,
+                  fontSize: 15,
+                }}
+              >
                 Aceptar
               </Text>
             </Pressable>
-
           </View>
         </View>
       </View>
     </Modal>
-
   );
 };
 
