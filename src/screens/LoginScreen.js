@@ -321,7 +321,8 @@ export default function LoginScreen() {
                 fontSize: 28,
                 fontWeight: "500",
                 color: "#333",
-                marginBottom: 20,
+                marginTop: 20,
+                marginBottom: 10,
               }}
             >
               Inicio de Sesion

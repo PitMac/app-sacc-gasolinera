@@ -14,11 +14,18 @@ const DrawerComponent = (props) => {
   const logout = useAuthStore((state) => state.logout);
   const useToken = useAuthStore((state) => state.userToken);
   const [usuario, setUsuario] = useState([]);
+  const [errorImage, setErrorImage] = useState(true);
+  const [periodofiscal_id, setPeriodofiscal_id] = useState(0);
+  const [objLicensed, setObjLicensed] = useState({});
 
   useEffect(() => {
     async function handleLogout() {
       const data = await getToken("configuration");
       setUsuario(data.userData);
+      setObjLicensed(localstorage.licensed);
+      if (localstorage && "periodofiscal_id" in localstorage) {
+        setPeriodofiscal_id(localstorage.periodofiscal_id);
+      }
     }
 
     handleLogout();
@@ -39,11 +46,23 @@ const DrawerComponent = (props) => {
       <View style={{ padding: 0, margin: 0, width: "100%" }}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
           <View style={styles.avatarContainer}>
-            <Image
-              style={styles.avatar}
-              contentFit="contain"
-              source={require("../../assets/images/logo_solo.png")}
-            />
+            {periodofiscal_id > 0 && !errorImage && (
+              <Image
+                source={{
+                  uri: `${objLicensed.route}assets/images/${usuario.periodosfiscales.find((x) => x.id === periodofiscal_id).contribuyente_id}/logo_empresa.png`,
+                }}
+                style={styles.avatar}
+                onError={() => setErrorImage(true)}
+              />
+            )}
+
+            {(periodofiscal_id === 0 || errorImage) && (
+              <Image
+                style={styles.avatar}
+                contentFit="contain"
+                source={require("../../assets/images/logo_solo.png")}
+              />
+            )}
           </View>
 
           <View style={{ marginTop: 10 }}>
@@ -89,7 +108,7 @@ const DrawerComponent = (props) => {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.appBarBackground,
     paddingVertical: 30,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 20,
@@ -108,7 +127,7 @@ const styles = StyleSheet.create({
   },
   name: {
     marginTop: 5,
-    color: "white",
+    color: Colors.primary,
     fontSize: 18,
     fontWeight: "700",
     textAlign: "center",

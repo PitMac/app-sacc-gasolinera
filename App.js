@@ -18,11 +18,12 @@ const theme = {
   colors: {
     ...DefaultTheme.colors,
     primary: Colors.primary,
-    secondary: "#947415",
-    secondaryContainer: Colors.secondary,
-    onSecondaryContainer: Colors.primary,
+    secondary: "#03dac4",
+    secondaryContainer: Colors.primary,
+    onSecondaryContainer: "white",
     onBackground: "#d5a200",
     background: "#f0f0f0",
+    onSurface: "black",
   },
 };
 
