@@ -490,6 +490,7 @@ export default function HomeScreen() {
   useEffect(() => {
     async function getconexionTransactor() {
       const localstorage = await getToken("configuration");
+      const configUser = localstorage.configurationUser;
       const estId =
         parseInt(localstorage.establecimientoId ?? 0) > 0
           ? localstorage.establecimientoId
@@ -1340,7 +1341,8 @@ export default function HomeScreen() {
               ? JSON.parse(cliente.placas)
               : [];
             const objPlaca = placasCliente.find(
-              (x) => x.placa.toUpperCase() === placa.toUpperCase(),
+              (x) =>
+                (x.placa ?? "").toUpperCase() === (placa ?? "").toUpperCase(),
             );
             let placaHabilitadaCredito = false;
 
@@ -1467,7 +1469,7 @@ export default function HomeScreen() {
         setIsLoading(false);
         showAlert({
           title: "Error",
-          message: "Error al consultar la proforma del surtidor.",
+          message: "Error al consultar la proforma del surtidor. " + error,
         });
       }
     }
@@ -1662,11 +1664,12 @@ export default function HomeScreen() {
               ? (typeof objHeadBilling.placas === "string"
                   ? JSON.parse(objHeadBilling.placas)
                   : objHeadBilling.placas
-                ).filter((x) => x.placa.replace(/[_-]/g, "") !== "")
+                ).filter((x) => (x.placa ?? "").replace(/[_-]/g, "") !== "")
               : [];
           let existePlaca = arrPlacas.some(
             (data) =>
-              data.placa.toLowerCase() === objHeadBilling.placa.toLowerCase(),
+              (data.placa ?? "").toLowerCase() ===
+              (objHeadBilling.placa ?? "").toLowerCase(),
           );
           if (!existePlaca) {
             arrPlacas.push({
@@ -1952,7 +1955,6 @@ export default function HomeScreen() {
                 setIsLoading(true);
               }
             }
-
             instance
               .get(
                 `api/v1/cartera/cliente/search/placa/${periodofiscal_id}/${
