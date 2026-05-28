@@ -145,10 +145,11 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
   useEffect(() => {
     async function getconexionTransactor() {
       const localstorage = await getToken("configuration");
+      const configUser = localstorage?.configurationUser ?? {};
       const estId =
-        parseInt(localstorage.establecimientoId ?? 0) > 0
-          ? localstorage.establecimientoId
-          : configUser.establecimiento_id;
+        parseInt(localstorage?.configurationUser?.establecimiento_id ?? 0) > 0
+          ? localstorage?.configurationUser?.establecimiento_id
+          : configUser?.establecimiento_id;
       if (!conexionTransactor.conectado && parseInt(estId) > 0) {
         const establecimientoObj =
           localstorage.parametrizacion.establecimientos.find(
@@ -192,7 +193,7 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
     setIsLoading(true);
     const dataPost = { comando: `GT ${keyFila}@#`, url };
     let data;
-
+    console.log(dataPost,url)
     await instance
       .post(url, dataPost, {
         //.post("http://192.168.100.25:3008/puente", dataPost, {
