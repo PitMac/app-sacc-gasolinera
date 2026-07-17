@@ -6,7 +6,7 @@ export const apiPrinter = "http://192.168.100.194:3001";
 const storeToken = async (authData, nameIdentity) => {
   try {
     await AsyncStorage.setItem(nameIdentity, JSON.stringify(authData));
-  } catch (error) {}
+  } catch (error) { }
 };
 
 function sleep(ms) {
@@ -24,19 +24,22 @@ const getToken = async (authIdentity) => {
 
 function validateFormatPlaca(input) {
   const patterns = {
-    AAA0000: /^[A-Z]{3}\d{4}$/,
-    AA000A: /^[A-Z]{2}\d{3}[A-Z]$/,
-    CC0000: /^CC\d{4}$/,
-    CD0000: /^CD\d{4}$/,
-    OI0000: /^OI\d{4}$/,
-    AT0000: /^AT\d{4}$/,
-    IT0000: /^IT\d{4}$/,
+    AAA0000: /^[A-Z]{3}\d{4}$/,         // Tres letras y cuatro números (ej: ABC1234)
+    AA000A: /^[A-Z]{2}\d{3}[A-Z]$/,     // Dos letras, tres números y una letra (motos)
+    CC0000: /^CC\d{4}$/,                // Cuerpo Consular
+    CD0000: /^CD\d{4}$/,                // Cuerpo Diplomático
+    OI0000: /^OI\d{4}$/,                // Organismos Internacionales
+    AT0000: /^AT\d{4}$/,                // Asistencia Técnica
+    IT0000: /^IT\d{4}$/,                // Internación Temporal
+    MAQNAAAAA: /^MAQN[A-Z0-9]{5}$/,     // Maquinaria (MAQN + 5 caracteres alfanuméricos)
+    CUAAAAAA: /^CU[A-Z0-9]{6}$/,        // Internación Temporal de Aduanas (CU + 6 caracteres alfanuméricos)
   };
   for (let key in patterns) {
-    if (patterns[key].test(input)) {
+    if (formatos[key].test(input)) {
       return true;
     }
   }
+
   return false;
 }
 
@@ -53,7 +56,7 @@ const removeStoragePropFromObject = async (nameObject, propertie) => {
     const obj = await getToken(nameObject);
     delete obj[propertie];
     await storeToken(obj, nameObject);
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const currentDate = () => {

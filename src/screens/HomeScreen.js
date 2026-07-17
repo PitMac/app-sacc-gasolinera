@@ -400,7 +400,7 @@ export default function HomeScreen() {
     useCallback(() => {
       callDataInitial();
       getInformation();
-      return () => {};
+      return () => { };
     }, [refreshData]),
   );
 
@@ -575,8 +575,7 @@ export default function HomeScreen() {
     }
     instance
       .get(
-        `api/v1/gasolinera/surtidor/findby/estacion/${
-          codigosEstaciones !== "" ? codigosEstaciones : 0
+        `api/v1/gasolinera/surtidor/findby/estacion/${codigosEstaciones !== "" ? codigosEstaciones : 0
         }`,
       )
       .then((resp) => {
@@ -633,7 +632,7 @@ export default function HomeScreen() {
             const dataSurtidor = resp.data.surtidores.find(
               (x) =>
                 x.codigo_transactor.split(",")[0] ===
-                  selectedSurtidor.codigo_transactor && x.proforma,
+                selectedSurtidor.codigo_transactor && x.proforma,
             );
             if (dataSurtidor) {
               setSelectedSurtidor({
@@ -869,8 +868,8 @@ export default function HomeScreen() {
       .validarFiltroPagoUsuario
       ? listtipospago.length > 0
         ? localstorage.tipoPago.filter((tipo) =>
-            listtipospago.includes(tipo.id),
-          )
+          listtipospago.includes(tipo.id),
+        )
         : []
       : localstorage.tipoPago;
     setTipoPago(filteredTipoPago);
@@ -934,8 +933,7 @@ export default function HomeScreen() {
     setSearchResumenModal(true);
     try {
       const res = await instance.get(
-        `api/v1/gasolinera/resumen/despacho/turno/${periodofiscal_id}/${currentDate()}/${
-          usuario.user_id
+        `api/v1/gasolinera/resumen/despacho/turno/${periodofiscal_id}/${currentDate()}/${usuario.user_id
         }`,
       );
       if (res.data.status === 200) {
@@ -1412,7 +1410,7 @@ export default function HomeScreen() {
               saldoFacturas: dataProforma.saldoFacturas ?? 0,
               valorAnticipo:
                 cliente.pagoanticipado &&
-                parametrizacion.facturasAnticipadasAnticipo
+                  parametrizacion.facturasAnticipadasAnticipo
                   ? dataProforma.pagoanticipado
                   : 0,
             });
@@ -1588,7 +1586,7 @@ export default function HomeScreen() {
                 saldoFacturas: itemSupplier.saldoFacturas ?? 0,
                 valorAnticipo:
                   itemSupplier.pagoanticipado &&
-                  parametrizacion.facturasAnticipadasAnticipo
+                    parametrizacion.facturasAnticipadasAnticipo
                     ? data.pagosanticipados
                     : 0,
               });
@@ -1662,9 +1660,9 @@ export default function HomeScreen() {
           arrPlacas =
             (objHeadBilling.placas ?? []).length > 0
               ? (typeof objHeadBilling.placas === "string"
-                  ? JSON.parse(objHeadBilling.placas)
-                  : objHeadBilling.placas
-                ).filter((x) => (x.placa ?? "").replace(/[_-]/g, "") !== "")
+                ? JSON.parse(objHeadBilling.placas)
+                : objHeadBilling.placas
+              ).filter((x) => (x.placa ?? "").replace(/[_-]/g, "") !== "")
               : [];
           let existePlaca = arrPlacas.some(
             (data) =>
@@ -1957,8 +1955,7 @@ export default function HomeScreen() {
             }
             instance
               .get(
-                `api/v1/cartera/cliente/search/placa/${periodofiscal_id}/${
-                  isPrueba ? "ZZZ9999" : numeroplaca.toUpperCase()
+                `api/v1/cartera/cliente/search/placa/${periodofiscal_id}/${isPrueba ? "ZZZ9999" : numeroplaca.toUpperCase()
                 }?${queryParams}`,
               )
               .then((resp) => {
@@ -2055,15 +2052,15 @@ export default function HomeScreen() {
                       placa: objHeadBilling.placa,
                       cupocredito:
                         !data.item.permitir_orden_venta &&
-                        data.item.cupocredito &&
-                        placaHabilitadaCredito
+                          data.item.cupocredito &&
+                          placaHabilitadaCredito
                           ? parseFloat(data.item.cupocredito)
                           : 0,
                       tipoventa:
                         !data.item.permitir_orden_venta &&
-                        data.item.cupocredito &&
-                        parseFloat(data.item.cupocredito) > 0 &&
-                        placaHabilitadaCredito
+                          data.item.cupocredito &&
+                          parseFloat(data.item.cupocredito) > 0 &&
+                          placaHabilitadaCredito
                           ? "CR"
                           : "CO",
                       permitir_orden_venta:
@@ -2072,16 +2069,16 @@ export default function HomeScreen() {
                           : false,
                       pagoanticipado:
                         !data.item.permitir_orden_venta &&
-                        data.item.pagoanticipado &&
-                        placaHabilitadaCredito
+                          data.item.pagoanticipado &&
+                          placaHabilitadaCredito
                           ? data.item.pagoanticipado
                           : false,
                       arrPagosanticipados: data.item.pagosanticipados ?? [],
                       facturaanticipo_id:
                         arrAnticipos.length >= 1
                           ? arrAnticipos[0].id +
-                            "," +
-                            arrAnticipos[0].tipo_documento
+                          "," +
+                          arrAnticipos[0].tipo_documento
                           : 0,
                       resp_permitir_orden_venta: data.item.permitir_orden_venta,
                       resp_pagoanticipado: data.item.pagoanticipado,
@@ -2091,7 +2088,7 @@ export default function HomeScreen() {
                       saldoFacturas: data.item.saldoFacturas ?? 0,
                       valorAnticipo:
                         data.item.pagoanticipado &&
-                        parametrizacion.facturasAnticipadasAnticipo
+                          parametrizacion.facturasAnticipadasAnticipo
                           ? data.item.pagosanticipados
                           : 0,
                     }));
@@ -2273,7 +2270,7 @@ export default function HomeScreen() {
                 saldoFacturas: itemSupplier.saldoFacturas ?? 0,
                 valorAnticipo:
                   itemSupplier.pagoanticipado &&
-                  parametrizacion.facturasAnticipadasAnticipo
+                    parametrizacion.facturasAnticipadasAnticipo
                     ? itemSupplier.pagosanticipados
                     : 0,
               }));
@@ -2807,8 +2804,7 @@ export default function HomeScreen() {
     const fechaActual = currentDate();
     instance
       .get(
-        `api/v1/gasolinera/surtidor/information/cierre/turno/${periodofiscal_id}/${
-          turnoActivo.asignacionturno_id ?? 0
+        `api/v1/gasolinera/surtidor/information/cierre/turno/${periodofiscal_id}/${turnoActivo.asignacionturno_id ?? 0
         }/${usuario.user_id}/${fechaActual}`,
       )
       .then((res) => {
@@ -2951,22 +2947,22 @@ export default function HomeScreen() {
       clave_primaria:
         tipo !== "FAC" && tipo !== "TIK"
           ? [
-              {
-                "c.id": idComprobante ?? 0,
-                "c.periodofiscal_id": periodofiscal_id,
-                "c.tipo_documento": tipo,
-                isHideHeader: "true",
-                numeroImpresion: 0,
-              },
-            ]
+            {
+              "c.id": idComprobante ?? 0,
+              "c.periodofiscal_id": periodofiscal_id,
+              "c.tipo_documento": tipo,
+              isHideHeader: "true",
+              numeroImpresion: 0,
+            },
+          ]
           : [
-              {
-                "f.id": idComprobante ?? 0,
-                "f.periodofiscal_id": periodofiscal_id,
-                "f.tipo_documento": tipo,
-                isHideHeader: "true",
-              },
-            ],
+            {
+              "f.id": idComprobante ?? 0,
+              "f.periodofiscal_id": periodofiscal_id,
+              "f.tipo_documento": tipo,
+              isHideHeader: "true",
+            },
+          ],
     };
     instance
       .post("api/v1/gasolinera/formatoimpresion/html/print", dataPrint, config)
@@ -3126,7 +3122,7 @@ export default function HomeScreen() {
             producto_id: surtidorSeleccionado.producto.id,
             costo: surtidorSeleccionado.producto.impuesto
               ? precioIva /
-                ((tipoDocumento === "FAC" ? valorImpuestoIVA : 0) / 100 + 1)
+              ((tipoDocumento === "FAC" ? valorImpuestoIVA : 0) / 100 + 1)
               : precioIva,
             cantidad: cantidad,
             bodega_id: bodegaId,
@@ -3190,8 +3186,8 @@ export default function HomeScreen() {
         let arrPlacas =
           (placas ?? []).length > 0
             ? (typeof placas === "string" ? JSON.parse(placas) : placas).filter(
-                (x) => x.placa.replace(/[_-]/g, "") !== "",
-              )
+              (x) => (x.placa ?? '').replace(/[_-]/g, "") !== "",
+            )
             : [];
         let existePlaca = arrPlacas.some(
           (data) =>
@@ -3225,7 +3221,7 @@ export default function HomeScreen() {
             telefono: objProforma.cliente.persona.telefonocelular,
             correo: objProforma.cliente.persona.correopersonal,
             placas: arrPlacas.filter(
-              (x) => x.placa.replace(/[_-]/g, "") !== "",
+              (x) => (x.placa ?? '').replace(/[_-]/g, "") !== "",
             ),
           },
           detalletransaccion,
@@ -3401,7 +3397,7 @@ export default function HomeScreen() {
             producto_id: surtidorSeleccionado.producto.id,
             costo: surtidorSeleccionado.producto.impuesto
               ? precioIva /
-                ((tipoDocumento === "FAC" ? valorImpuestoIVA : 0) / 100 + 1)
+              ((tipoDocumento === "FAC" ? valorImpuestoIVA : 0) / 100 + 1)
               : precioIva,
             cantidad: cantidad,
             bodega_id: bodegaId,
@@ -3522,8 +3518,8 @@ export default function HomeScreen() {
         let arrPlacas =
           (placas ?? []).length > 0
             ? (typeof placas === "string" ? JSON.parse(placas) : placas).filter(
-                (x) => x.placa.replace(/[_-]/g, "") !== "",
-              )
+              (x) => (x.placa ?? '').replace(/[_-]/g, "") !== "",
+            )
             : [];
         let existePlaca = arrPlacas.some(
           (data) =>
@@ -3558,7 +3554,7 @@ export default function HomeScreen() {
             telefono: objHeadBilling.telefono,
             correo: objHeadBilling.correo,
             placas: arrPlacas.filter(
-              (x) => x.placa.replace(/[_-]/g, "") !== "",
+              (x) => (x.placa ?? '').replace(/[_-]/g, "") !== "",
             ),
           },
           detalletransaccion,
@@ -4225,10 +4221,10 @@ export default function HomeScreen() {
                                   const objInfoSurtidor = arrsurtidores.find(
                                     (x) =>
                                       x.codigo_transactor ===
-                                        (informationTransactor?.codigofila_transactor ??
-                                          "") +
-                                          "," +
-                                          informationTransactor?.codigopistola_transactor ??
+                                      (informationTransactor?.codigofila_transactor ??
+                                        "") +
+                                      "," +
+                                      informationTransactor?.codigopistola_transactor ??
                                       "",
                                   );
 
@@ -4252,7 +4248,7 @@ export default function HomeScreen() {
                                     objInfoSurtidor &&
                                     !estadosTransactor.cobrando.includes(
                                       informationTransactor?.estado_transactor ??
-                                        "",
+                                      "",
                                     )
                                   ) {
                                     colorFondo =
@@ -4264,7 +4260,7 @@ export default function HomeScreen() {
                                     objInfoSurtidor &&
                                     estadosTransactor.cobrando.includes(
                                       informationTransactor?.estado_transactor ??
-                                        "",
+                                      "",
                                     )
                                   ) {
                                     colorFondo = "#BFB9B9";
@@ -4288,7 +4284,7 @@ export default function HomeScreen() {
                                   const mostrarBotonBloqueo =
                                     !dataLado.proforma &&
                                     informationTransactor?.estado_transactor ===
-                                      "Ci" &&
+                                    "Ci" &&
                                     parametrizacion.activarBotonDesbloquearSurtidor;
 
                                   return (
@@ -4313,17 +4309,16 @@ export default function HomeScreen() {
                                             surtidor: surtidor,
                                             surtidoresFila_ids:
                                               surtidoresFila_ids &&
-                                              surtidoresFila_ids !== ""
+                                                surtidoresFila_ids !== ""
                                                 ? surtidoresFila_ids
                                                 : surtidor_id,
                                             surtidor_id: surtidor_id,
                                             codigo_transactor:
                                               dataLado?.codigo_transactor ?? "",
-                                            nombre: `${subItem.estacion.toUpperCase()}-${
-                                              dataLado.posicion === "L"
+                                            nombre: `${subItem.estacion.toUpperCase()}-${dataLado.posicion === "L"
                                                 ? "LADO B"
                                                 : "LADO A"
-                                            }`,
+                                              }`,
                                             transaccion_transactor:
                                               informationTransactor?.transaccion_transactor ??
                                               0,
@@ -4350,16 +4345,16 @@ export default function HomeScreen() {
                                           </Text>
                                           {estadosTransactor.cobrando.includes(
                                             informationTransactor?.estado_transactor ??
-                                              "",
+                                            "",
                                           ) ? (
                                             <PagandoSVG
                                               height={80}
                                               width={80}
                                             />
                                           ) : estadosTransactor.dispensando.includes(
-                                              informationTransactor?.estado_transactor ??
-                                                "",
-                                            ) ? (
+                                            informationTransactor?.estado_transactor ??
+                                            "",
+                                          ) ? (
                                             <DispensandoSVG
                                               height={80}
                                               width={80}
@@ -4438,18 +4433,17 @@ export default function HomeScreen() {
                                               surtidor: surtidor,
                                               surtidoresFila_ids:
                                                 surtidoresFila_ids &&
-                                                surtidoresFila_ids !== ""
+                                                  surtidoresFila_ids !== ""
                                                   ? surtidoresFila_ids
                                                   : surtidor_id,
                                               surtidor_id: surtidor_id,
                                               codigo_transactor:
                                                 dataLado?.codigo_transactor ??
                                                 "",
-                                              nombre: `${subItem.estacion.toUpperCase()}-${
-                                                dataLado.posicion === "L"
+                                              nombre: `${subItem.estacion.toUpperCase()}-${dataLado.posicion === "L"
                                                   ? "LADO B"
                                                   : "LADO A"
-                                              }`,
+                                                }`,
                                               transaccion_transactor:
                                                 informationTransactor?.transaccion_transactor ??
                                                 0,
