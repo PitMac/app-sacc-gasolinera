@@ -1672,7 +1672,7 @@ export default function HomeScreen() {
           if (!existePlaca) {
             arrPlacas.push({
               codigo: arrPlacas.length + 1,
-              placa: objHeadBilling.placa.toUpperCase(),
+              placa: (objHeadBilling.placa ?? '').toUpperCase(),
               modelo: "",
             });
           }
@@ -3191,12 +3191,12 @@ export default function HomeScreen() {
             : [];
         let existePlaca = arrPlacas.some(
           (data) =>
-            data.placa.toLowerCase() === objProforma.placa.toLowerCase(),
+            (data.placa ?? '').toLowerCase() === (objProforma.placa ?? '').toLowerCase(),
         );
         if (!existePlaca) {
           arrPlacas.push({
             codigo: arrPlacas.length + 1,
-            placa: objProforma.placa.toUpperCase(),
+            placa: (objProforma.placa ?? '').toUpperCase(),
             modelo: "",
           });
         }
@@ -3523,13 +3523,13 @@ export default function HomeScreen() {
             : [];
         let existePlaca = arrPlacas.some(
           (data) =>
-            data.placa.toLowerCase() === objHeadBilling.placa.toLowerCase(),
+            (data.placa ?? '').toLowerCase() === (objHeadBilling.placa ?? '').toLowerCase(),
         );
 
         if (!existePlaca) {
           arrPlacas.push({
             codigo: arrPlacas.length + 1,
-            placa: objHeadBilling.placa.toUpperCase(),
+            placa: (objHeadBilling.placa ?? '').toUpperCase(),
             modelo: "",
           });
         }
@@ -4316,8 +4316,8 @@ export default function HomeScreen() {
                                             codigo_transactor:
                                               dataLado?.codigo_transactor ?? "",
                                             nombre: `${subItem.estacion.toUpperCase()}-${dataLado.posicion === "L"
-                                                ? "LADO B"
-                                                : "LADO A"
+                                              ? "LADO B"
+                                              : "LADO A"
                                               }`,
                                             transaccion_transactor:
                                               informationTransactor?.transaccion_transactor ??
@@ -4441,8 +4441,8 @@ export default function HomeScreen() {
                                                 dataLado?.codigo_transactor ??
                                                 "",
                                               nombre: `${subItem.estacion.toUpperCase()}-${dataLado.posicion === "L"
-                                                  ? "LADO B"
-                                                  : "LADO A"
+                                                ? "LADO B"
+                                                : "LADO A"
                                                 }`,
                                               transaccion_transactor:
                                                 informationTransactor?.transaccion_transactor ??
