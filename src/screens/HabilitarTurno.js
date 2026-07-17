@@ -193,7 +193,6 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
     setIsLoading(true);
     const dataPost = { comando: `GT ${keyFila}@#`, url };
     let data;
-    console.log(dataPost,url)
     await instance
       .post(url, dataPost, {
         //.post("http://192.168.100.25:3008/puente", dataPost, {
