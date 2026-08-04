@@ -1,22 +1,23 @@
 {
   "build": {
     "development": {
-            "developmentClient": true,
-            "distribution": "internal"
-        },
-        "preview": {
-            "android": {
-                "buildType": "apk"
-            }
-        },
-        "production": {
-            "autoIncrement": true,
-            "android": {
-                "buildType": "app-bundle"
-            }
-        }
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
   },
   "cli": {
-    "promptToConfigurePushNotifications": false
+    "promptToConfigurePushNotifications": false,
+    "appVersionSource": "remote"
   }
 }

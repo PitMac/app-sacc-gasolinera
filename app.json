@@ -2,7 +2,7 @@
   "expo": {
     "name": "Gasolinera SACC",
     "slug": "app-sacc-gasolinera",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.controlsistemasjl.gasolineraapp"
     },
     "android": {
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"

@@ -88,7 +88,7 @@ function DispensarModalComponent(props) {
         center={true}
         leftIcon={
           permisos?.GASOLINERA?.PERMITE_PRUEBAS_TECNICAS &&
-          !selectedSurtidor?.proforma?.pruebatecnica
+            !selectedSurtidor?.proforma?.pruebatecnica
             ? "build-outline"
             : null
         }
@@ -154,7 +154,6 @@ function DispensarModalComponent(props) {
                 label="Placa"
                 editable={!selectedSurtidor?.isFacturaAnticipo}
                 error={error !== ""}
-                maxLength={8}
                 right={
                   <TextInput.Icon
                     icon="magnify"
@@ -181,35 +180,35 @@ function DispensarModalComponent(props) {
                   <View style={{ width: 10 }} />
                 ))}
               {objHeadBilling.placas === null ||
-              objHeadBilling.placas?.length <=
+                objHeadBilling.placas?.length <=
                 1 ? null : !selectedSurtidor?.isFacturaAnticipo ? (
-                <View style={{ marginLeft: 5 }}>
-                  <CustomPicker
-                    selectedValue={
-                      objHeadBilling.placa !== ""
-                        ? objHeadBilling.placa
-                        : objHeadBilling.placas &&
+                  <View style={{ marginLeft: 5 }}>
+                    <CustomPicker
+                      selectedValue={
+                        objHeadBilling.placa !== ""
+                          ? objHeadBilling.placa
+                          : objHeadBilling.placas &&
                             objHeadBilling.placas.length > 0
-                          ? objHeadBilling.placas[0]
-                          : ""
-                    }
-                    text={""}
-                    onValueChange={(value) => {
-                      validatePlacaYEstablecimiento(value);
-                      createChangeHandler("placa", value);
-                    }}
-                    items={((objHeadBilling.placas ?? [])?.length > 0
-                      ? typeof objHeadBilling.placas === "string"
-                        ? JSON.parse(objHeadBilling.placas)
-                        : objHeadBilling.placas
-                      : []
-                    ).map((campo) => ({
-                      label: campo.placa,
-                      value: campo.placa,
-                    }))}
-                  />
-                </View>
-              ) : null}
+                            ? objHeadBilling.placas[0]
+                            : ""
+                      }
+                      text={""}
+                      onValueChange={(value) => {
+                        validatePlacaYEstablecimiento(value);
+                        createChangeHandler("placa", value);
+                      }}
+                      items={((objHeadBilling.placas ?? [])?.length > 0
+                        ? typeof objHeadBilling.placas === "string"
+                          ? JSON.parse(objHeadBilling.placas)
+                          : objHeadBilling.placas
+                        : []
+                      ).map((campo) => ({
+                        label: campo.placa,
+                        value: campo.placa,
+                      }))}
+                    />
+                  </View>
+                ) : null}
               {objHeadBilling.placa !== "" &&
                 objHeadBilling.placa !== undefined && (
                   <View style={{ alignItems: "center" }}>
@@ -520,10 +519,10 @@ function DispensarModalComponent(props) {
                     findEstadoSelectedSurtidor() === "FACTURAR" &&
                     parametrizacion.habilitarPrimeroyFacturar
                   ) && (
-                    <Button mode="contained" onPress={() => searchPlaca(true)}>
-                      Habilitar Dispensador
-                    </Button>
-                  )}
+                      <Button mode="contained" onPress={() => searchPlaca(true)}>
+                        Habilitar Dispensador
+                      </Button>
+                    )}
                 </View>
               )}
             {parametrizacion.habilitarPrimeroyFacturar &&
@@ -800,23 +799,23 @@ function DispensarModalComponent(props) {
                         <View>
                           {(objPago.abreviatura === "CHE" ||
                             objPago.abreviatura === "OTR") && (
-                            <View>
-                              <View style={{ height: 60 }}>
-                                <TextInput
-                                  style={{ flex: 1, backgroundColor: "white" }}
-                                  label="# Cuenta"
-                                  mode={"outlined"}
-                                  value={objPago.numerocuentabancaria}
-                                  onChangeText={(text) =>
-                                    createChangeHandlerPago(
-                                      "numerocuentabancaria",
-                                      text,
-                                    )
-                                  }
-                                />
+                              <View>
+                                <View style={{ height: 60 }}>
+                                  <TextInput
+                                    style={{ flex: 1, backgroundColor: "white" }}
+                                    label="# Cuenta"
+                                    mode={"outlined"}
+                                    value={objPago.numerocuentabancaria}
+                                    onChangeText={(text) =>
+                                      createChangeHandlerPago(
+                                        "numerocuentabancaria",
+                                        text,
+                                      )
+                                    }
+                                  />
+                                </View>
                               </View>
-                            </View>
-                          )}
+                            )}
                           {objPago.abreviatura === "TAR" && (
                             <View>
                               <View style={{ height: 60 }}>

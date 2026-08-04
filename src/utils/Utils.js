@@ -35,7 +35,7 @@ function validateFormatPlaca(input) {
     CUAAAAAA: /^CU[A-Z0-9]{6}$/,        // Internación Temporal de Aduanas (CU + 6 caracteres alfanuméricos)
   };
   for (let key in patterns) {
-    if (formatos[key].test(input)) {
+    if (patterns[key].test(input)) {
       return true;
     }
   }
