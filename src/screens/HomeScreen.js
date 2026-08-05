@@ -3699,6 +3699,42 @@ export default function HomeScreen() {
     return info ? findEstadoSurtidor(info.estado_transactor) : "Sin señal";
   };
 
+  const removePlacaCliente = async (item) => {
+    const respuesta = await showModal({
+      title: "Información",
+      content:
+        "Estimado usuario, ¿Está seguro de querer eliminar la placa del cliente?"
+    });
+    if (!respuesta) {
+      return
+    }
+    const data = {
+      ...item,
+      periodofiscal_id: periodofiscal_id,
+      placa: objHeadBilling.placa,
+    }
+    instance
+      .put(
+        `api/v1/cartera/cliente/remove/placa`,
+        data,
+        config,
+      )
+      .then((resp) => {
+        if (resp.data.status === 202) {
+          setIsLoading(false);
+          setSearchListModal(false);
+          ToastAndroid.show("Se eliminó correctamente", ToastAndroid.SHORT);
+        }
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        showAlert({
+          title: "Error",
+          message: "Hubo un error",
+        });
+      });
+  }
+
   const renderDepositoModal = () => {
     return (
       <DepositoModalComponent
@@ -3726,6 +3762,7 @@ export default function HomeScreen() {
         setSearchListModal={setSearchListModal}
         setIsLoading={setIsLoading}
         actionClick={callCLienteByPlaca}
+        onRemove={removePlacaCliente}
       />
     );
   };

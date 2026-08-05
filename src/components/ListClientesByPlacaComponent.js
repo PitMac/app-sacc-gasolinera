@@ -16,6 +16,7 @@ export default function ListClientesByPlacaComponent({
   objHeadBilling,
   setSearchListModal,
   actionClick,
+  onRemove
 }) {
   const [clientes, setClientes] = useState([]);
   const insets = useSafeAreaInsets();
@@ -63,6 +64,7 @@ export default function ListClientesByPlacaComponent({
       <>
         <Pressable
           onPress={() => actionClick(item)}
+          onLongPress={() => onRemove(item)}
           style={({ pressed }) => ({
             backgroundColor: "white",
             borderTopLeftRadius: isFirst ? 18 : 5,
