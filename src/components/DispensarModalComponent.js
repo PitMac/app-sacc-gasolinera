@@ -209,6 +209,22 @@ function DispensarModalComponent(props) {
                     />
                   </View>
                 ) : null}
+              <View style={{ justifyContent: "center" }}>
+                <Pressable
+                  style={({ pressed }) => ({
+                    paddingHorizontal: 2,
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                  })}
+                  onPress={() => setSearchPersonModal(true)}
+                >
+                  <GlobalIcon
+                    family="material"
+                    name="person-search"
+                    size={30}
+                    color={Colors.primary}
+                  />
+                </Pressable>
+              </View>
               {objHeadBilling.placa !== "" &&
                 objHeadBilling.placa !== undefined && (
                   <View style={{ alignItems: "center" }}>
@@ -227,22 +243,6 @@ function DispensarModalComponent(props) {
                     </Pressable>
                   </View>
                 )}
-              <View style={{ justifyContent: "center" }}>
-                <Pressable
-                  style={({ pressed }) => ({
-                    paddingHorizontal: 2,
-                    transform: [{ scale: pressed ? 0.98 : 1 }],
-                  })}
-                  onPress={() => setSearchPersonModal(true)}
-                >
-                  <GlobalIcon
-                    family="material"
-                    name="person-search"
-                    size={30}
-                    color={Colors.primary}
-                  />
-                </Pressable>
-              </View>
               {selectedSurtidor?.proforma &&
                 !selectedSurtidor?.proforma?.pruebatecnica && (
                   <View style={{ justifyContent: "center" }}>
