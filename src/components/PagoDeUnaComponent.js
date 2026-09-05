@@ -14,6 +14,7 @@ import GlobalIcon from "./GlobalIcon";
 import instance from "../utils/Instance";
 import { showAlert } from "./CustomAlert";
 import { encryptData } from "../utils/cryptoHelper";
+import { sleep } from "../utils/Utils";
 
 export default function PagoDeUnaComponent(props) {
   const {
@@ -44,6 +45,9 @@ export default function PagoDeUnaComponent(props) {
   const [listdetallepago, setListdetallepago] = useState(
     (listSpendingPurchase ?? []).map((x) => x),
   );
+
+  const selectedDatoAdicional = 0;
+  const codigoMovilPago = codigomovil ?? headComprobante?.codigomovil ?? "";
 
   const totalPago = listdetallepago.reduce(
     (pago, item) =>
@@ -123,58 +127,68 @@ export default function PagoDeUnaComponent(props) {
     return () => clearInterval(intervalo);
   }, [contador, deshabilitado]);
 
-  const manejarClick = async () => {
-    if (!deshabilitado) {
-      setDeshabilitado(true);
-      setContador(15);
-      const datosServicios = JSON.parse(
-        JSON.parse(
-          informacion.establecimientos.find(
-            (x) => x.id === parseInt(establecimientoId),
-          ).additional_services ?? "{}",
-        ).api_pagos_deuna ?? "{}",
-      );
-      const urlapidatos = datosServicios?.url ?? "";
-      const codigodeuna = datosServicios?.codigodeuna ?? "";
-      const api_secret = datosServicios?.api_secret ?? "";
-      const api_key = datosServicios?.api_key ?? "";
-      const codigodeuna_caja =
-        informacion.cajas.find(
-          (x) => x.id === parseInt(parametrizacionObj.cajaVenta),
-        ).codigodeuna ?? "";
-      if (urlapidatos === "" || codigodeuna === "") {
-        showAlert({
-          title: "Información",
-          message:
-            "Estimado usuario, no se ha configurado una ruta de conexión con el api de DeUna",
-        });
-        return;
-      } else if (codigodeuna_caja === "") {
-        showAlert({
-          title: "Información",
-          message:
-            "Estimado usuario, No se ha configurado el codigo de DeUna para la caja seleccionada",
-        });
-        return;
-      } else if (api_secret === "" || api_key === "") {
-        showAlert({
-          title: "Información",
-          message:
-            "Estimado usuario, No se ha configurado el api_secret o api_key del establecimiento seleccionado",
-        });
-        return;
-      }
+  const resetConsultaBloqueo = () => {
+    setDeshabilitado(false);
+    setContador(0);
+  };
 
-      const dataenvio = {
-        ruta: urlapidatos,
-        caja: codigodeuna_caja,
-        codigodeuna: codigodeuna,
-        api_key: api_key,
-        api_secret: api_secret,
-        codigomovil: headComprobante.codigomovil,
-        transactionId: headComprobante.transaccionDeuna,
-        menu_id: menu,
-      };
+  const manejarClick = async () => {
+    if (deshabilitado) {
+      return;
+    }
+    setDeshabilitado(true);
+    setContador(15);
+    const datosServicios = JSON.parse(
+      JSON.parse(
+        informacion.establecimientos.find(
+          (x) => x.id === parseInt(establecimientoId),
+        ).additional_services ?? "{}",
+      ).api_pagos_deuna ?? "{}",
+    );
+    const urlapidatos = datosServicios?.url ?? "";
+    const codigodeuna = datosServicios?.codigodeuna ?? "";
+    const api_secret = datosServicios?.api_secret ?? "";
+    const api_key = datosServicios?.api_key ?? "";
+    const codigodeuna_caja =
+      informacion.cajas.find(
+        (x) => x.id === parseInt(parametrizacionObj.cajaVenta),
+      ).codigodeuna ?? "";
+    if (urlapidatos === "" || codigodeuna === "") {
+      resetConsultaBloqueo();
+      showAlert({
+        title: "Información",
+        message:
+          "Estimado usuario, no se ha configurado una ruta de conexión con el api de DeUna",
+      });
+      return;
+    } else if (codigodeuna_caja === "") {
+      resetConsultaBloqueo();
+      showAlert({
+        title: "Información",
+        message:
+          "Estimado usuario, No se ha configurado el codigo de DeUna para la caja seleccionada",
+      });
+      return;
+    } else if (api_secret === "" || api_key === "") {
+      resetConsultaBloqueo();
+      showAlert({
+        title: "Información",
+        message:
+          "Estimado usuario, No se ha configurado el api_secret o api_key del establecimiento seleccionado",
+      });
+      return;
+    }
+
+    const dataenvio = {
+      ruta: urlapidatos,
+      caja: codigodeuna_caja,
+      codigodeuna: codigodeuna,
+      api_key: api_key,
+      api_secret: api_secret,
+      codigomovil: codigoMovilPago,
+      transactionId: headComprobante.transaccionDeuna,
+      menu_id: menu,
+    };
 
       const dataEncriptada = encryptData(dataenvio);
       const getData = await instance.post(
@@ -215,7 +229,6 @@ export default function PagoDeUnaComponent(props) {
           });
         }
       }
-    }
   };
 
   async function actionDeUna() {
@@ -402,7 +415,7 @@ export default function PagoDeUnaComponent(props) {
       codigodeuna: codigodeuna,
       api_key: api_key,
       api_secret: api_secret,
-      codigomovil: headComprobante.codigomovil,
+      codigomovil: codigoMovilPago,
       transactionId: headComprobante.transaccionDeuna,
       menu_id: menu,
     };

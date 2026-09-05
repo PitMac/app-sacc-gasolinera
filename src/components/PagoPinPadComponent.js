@@ -177,7 +177,7 @@ export default function PagoPinPadComponent(props) {
         message:
           "Estimado usuario, no se ha configurado una ruta de conexión con el api del PindPad",
       });
-    } else if (Object(configCajaObj).keys === 0) {
+    } else if (Object.keys(configCajaObj).length === 0) {
       showAlert({
         title: "Información",
         message:
@@ -193,7 +193,10 @@ export default function PagoPinPadComponent(props) {
       setDatosPago({ tipopago_id: 0 });
       setTiposDiferidos([]);
       return;
-    } else if (Object(configuracionPinPadGeneral).keys === 0) {
+    } else if (
+      !configuracionPinPadGeneral ||
+      Object.keys(configuracionPinPadGeneral).length === 0
+    ) {
       showAlert({
         title: "Información",
         message:

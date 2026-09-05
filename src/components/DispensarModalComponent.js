@@ -77,6 +77,62 @@ function DispensarModalComponent(props) {
     validateDocumentoBancario,
   } = props;
 
+  const puedeTogglePagoAnticipado = () =>
+    Boolean(objHeadBilling.resp_pagoanticipado) ||
+    (objHeadBilling.arrPagosanticipados ?? []).length > 0 ||
+    parseFloat(objHeadBilling.valorAnticipo || 0) > 0;
+
+  const puedeToggleCredito = () => {
+    const cupo = parseFloat(objHeadBilling.cupocredito || 0);
+    const respCupo = parseFloat(objHeadBilling.resp_cupocredito || 0);
+    return !objHeadBilling.permitir_orden_venta && (cupo > 0 || respCupo > 0);
+  };
+
+  const showDetallePago = () => {
+    if (!selectedSurtidor || selectedSurtidor?.proforma?.pruebatecnica) {
+      return false;
+    }
+    if (selectedSurtidor.proforma) {
+      return true;
+    }
+    if (
+      parametrizacion.habilitarPrimeroyFacturar &&
+      findEstadoSelectedSurtidor() === "FACTURAR"
+    ) {
+      return true;
+    }
+    return (
+      !selectedSurtidor.proforma &&
+      (puedeTogglePagoAnticipado() || puedeToggleCredito())
+    );
+  };
+
+  const renderPagoAnticipadoCheckbox = () => (
+    <CustomCheckBox
+      title={"Pago Anticipado"}
+      checked={objHeadBilling.pagoanticipado}
+      onPress={() =>
+        setObjHeadBilling((prev) => ({
+          ...prev,
+          pagoanticipado: !prev.pagoanticipado,
+        }))
+      }
+    />
+  );
+
+  const renderCreditoCheckbox = () => (
+    <CustomCheckBox
+      title={"Credito"}
+      checked={objHeadBilling.tipoventa === "CR"}
+      onPress={() =>
+        setObjHeadBilling((prev) => ({
+          ...prev,
+          tipoventa: prev.tipoventa === "CR" ? "CO" : "CR",
+        }))
+      }
+    />
+  );
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -463,68 +519,18 @@ function DispensarModalComponent(props) {
                 />
               </View>
             </View>
-            {selectedSurtidor &&
-              (!selectedSurtidor.proforma ||
-                parametrizacion.facturasAnticipadasAnticipo) && (
-                <View style={{ marginTop: 10 }}>
-                  {objHeadBilling.arrPagosanticipados.length > 0 && (
-                    <View>
-                      <CustomCheckBox
-                        title={"Pago Anticipado"}
-                        checked={objHeadBilling.pagoanticipado}
-                        onPress={() =>
-                          setObjHeadBilling((prev) => ({
-                            ...prev,
-                            pagoanticipado: !prev.pagoanticipado,
-                          }))
-                        }
-                      />
-                      {objHeadBilling.pagoanticipado &&
-                        valorDispensar.boquilla !== "" &&
-                        !parametrizacion.facturasAnticipadasAnticipo && (
-                          <View style={{ alignItems: "flex-start" }}>
-                            <Text>Anticipo</Text>
-                            <CustomPicker
-                              selectedValue={objHeadBilling.facturaanticipo_id}
-                              onValueChange={(itemValue) =>
-                                createChangeHandler(
-                                  "facturaanticipo_id",
-                                  itemValue,
-                                )
-                              }
-                              text={(() => {
-                                const factura = facturasAnticipadas.find(
-                                  (item) =>
-                                    item.id + "," + item.tipo_documento ===
-                                    objHeadBilling.facturaanticipo_id,
-                                );
-                                return factura ? factura.total : "";
-                              })()}
-                              items={facturasAnticipadas.map((item) => ({
-                                label: item.total,
-                                value: item.id + "," + item.tipo_documento,
-                              }))}
-                            />
-                          </View>
-                        )}
-                      <Text
-                        style={{ color: Colors.primary, fontWeight: "bold" }}
-                      >
-                        SALDO DISPONIBLE: $
-                        {objHeadBilling.valorAnticipo.toFixed(2)}
-                      </Text>
-                    </View>
-                  )}
-                  {!(
-                    findEstadoSelectedSurtidor() === "FACTURAR" &&
-                    parametrizacion.habilitarPrimeroyFacturar
-                  ) && (
-                      <Button mode="contained" onPress={() => searchPlaca(true)}>
-                        Habilitar Dispensador
-                      </Button>
-                    )}
-                </View>
-              )}
+            {selectedSurtidor && !selectedSurtidor.proforma && (
+              <View style={{ marginTop: 10 }}>
+                {!(
+                  findEstadoSelectedSurtidor() === "FACTURAR" &&
+                  parametrizacion.habilitarPrimeroyFacturar
+                ) && (
+                  <Button mode="contained" onPress={() => searchPlaca(true)}>
+                    Habilitar Dispensador
+                  </Button>
+                )}
+              </View>
+            )}
             {parametrizacion.habilitarPrimeroyFacturar &&
               selectedSurtidor &&
               !selectedSurtidor.proforma &&
@@ -571,34 +577,71 @@ function DispensarModalComponent(props) {
                   </Chip>
                 </View>
               )}
-            {selectedSurtidor &&
-              ((selectedSurtidor.proforma &&
-                !selectedSurtidor?.proforma?.pruebatecnica) ||
-                (parametrizacion.habilitarPrimeroyFacturar &&
-                  !selectedSurtidor.proforma &&
-                  findEstadoSelectedSurtidor() === "FACTURAR" &&
-                  !(
-                    parametrizacion.facturasAnticipadasAnticipo &&
-                    objHeadBilling.pagoanticipado &&
-                    objHeadBilling.valorAnticipo > 0
-                  ))) && (
+            {showDetallePago() && (
                 <>
-                  {!objHeadBilling.autoconsumo && (
-                    <>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Text>Detalle Del Pago:</Text>
-                        {objHeadBilling.tipoventa === "CR" && (
-                          <Text style={{ fontSize: 13 }}>
-                            Cupo credito: ${objHeadBilling.saldoFacturas}
-                          </Text>
-                        )}
-                      </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Text>Detalle Del Pago:</Text>
+                    {objHeadBilling.tipoventa === "CR" && (
+                      <Text style={{ fontSize: 13 }}>
+                        Cupo credito: $
+                        {objHeadBilling.cupoCreditoCliente ??
+                          objHeadBilling.saldoFacturas}
+                      </Text>
+                    )}
+                  </View>
 
+                  {puedeTogglePagoAnticipado() && renderPagoAnticipadoCheckbox()}
+                  {objHeadBilling.pagoanticipado &&
+                    valorDispensar.boquilla !== "" &&
+                    !parametrizacion.facturasAnticipadasAnticipo && (
+                      <View style={{ alignItems: "flex-start" }}>
+                        <Text>Anticipo</Text>
+                        <CustomPicker
+                          selectedValue={objHeadBilling.facturaanticipo_id}
+                          onValueChange={(itemValue) =>
+                            createChangeHandler(
+                              "facturaanticipo_id",
+                              itemValue,
+                            )
+                          }
+                          text={(() => {
+                            const factura = facturasAnticipadas.find(
+                              (item) =>
+                                item.id + "," + item.tipo_documento ===
+                                objHeadBilling.facturaanticipo_id,
+                            );
+                            return factura ? factura.total : "";
+                          })()}
+                          items={facturasAnticipadas.map((item) => ({
+                            label: item.total,
+                            value: item.id + "," + item.tipo_documento,
+                          }))}
+                        />
+                      </View>
+                    )}
+                  {objHeadBilling.pagoanticipado &&
+                    parametrizacion.facturasAnticipadasAnticipo &&
+                    parseFloat(objHeadBilling.valorAnticipo) > 0 && (
+                      <Text
+                        style={{ color: Colors.primary, fontWeight: "bold" }}
+                      >
+                        SALDO DISPONIBLE: $
+                        {parseFloat(objHeadBilling.valorAnticipo).toFixed(2)}
+                      </Text>
+                    )}
+
+                  {!objHeadBilling.autoconsumo &&
+                    !selectedSurtidor?.isFacturaAnticipo &&
+                    !(
+                      parametrizacion.facturasAnticipadasAnticipo &&
+                      objHeadBilling.pagoanticipado &&
+                      parseFloat(objHeadBilling.valorAnticipo) > 0
+                    ) && (
                       <View
                         style={{ flexDirection: "row", alignItems: "center" }}
                       >
@@ -622,27 +665,11 @@ function DispensarModalComponent(props) {
                           }}
                         />
                       </View>
-                    </>
-                  )}
-
-                  {objHeadBilling.cupocredito > 0 &&
-                    !objHeadBilling.permitir_orden_venta && (
-                      <>
-                        <View>
-                          <CustomCheckBox
-                            title={"Credito"}
-                            checked={objHeadBilling.tipoventa === "CR"}
-                            onPress={() =>
-                              setObjHeadBilling((prev) => ({
-                                ...prev,
-                                tipoventa:
-                                  prev.tipoventa === "CR" ? "CO" : "CR",
-                              }))
-                            }
-                          />
-                        </View>
-                      </>
                     )}
+
+                  {puedeToggleCredito() && (
+                    <View>{renderCreditoCheckbox()}</View>
+                  )}
                   {objHeadBilling.autoconsumo && (
                     <>
                       <View

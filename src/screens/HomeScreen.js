@@ -17,12 +17,9 @@ import {
   useIsFocused,
   useNavigation,
 } from "@react-navigation/native";
-import { Button, Portal } from "react-native-paper";
+import { Button, Portal, Switch } from "react-native-paper";
 import instance from "../utils/Instance";
 import Loader from "../components/Loader";
-import DispensadorSVG from "../../assets/images/misc/dispensador.svg";
-import DispensandoSVG from "../../assets/images/misc/dispensando.svg";
-import PagandoSVG from "../../assets/images/misc/pagando.svg";
 import HabilitarTurno from "./HabilitarTurno";
 import useAuthStore from "../stores/AuthStore";
 import { useDeviceOrientation } from "@react-native-community/hooks";
@@ -48,9 +45,16 @@ import CustomModalContainer from "../components/CustomModalContainer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PagoDeUnaComponent from "../components/PagoDeUnaComponent";
 import PagoPinPadComponent from "../components/PagoPinPadComponent";
+import SurtidorEstacionCard from "../components/SurtidorEstacionCard";
+import { useGasolineraComandos } from "../hooks/useGasolineraComandos";
 
 export default function HomeScreen() {
-  const isDesarrollo = false;
+  const {
+    isDevBuild,
+    isDesarrollo,
+    enviarComandos,
+    toggleModoProduccion,
+  } = useGasolineraComandos();
 
   const isDrawerOpen = useDrawerStatus() === "open";
   const showModal = useModalStore((state) => state.showModal);
@@ -235,6 +239,7 @@ export default function HomeScreen() {
     autoconsumo: false,
     saldoFacturas: 0,
     valorAnticipo: 0,
+    cupoCreditoCliente: 0,
   });
   const [isEditData, setEditData] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -318,6 +323,14 @@ export default function HomeScreen() {
   };
 
   const closePagarPinPadModal = () => {
+    if (estadoPinPad?.procesando) {
+      showAlert({
+        title: "Información",
+        message:
+          "Estimado usuario, hay un cobro PinPad en proceso. Espere a que finalice.",
+      });
+      return;
+    }
     setIsOpenModalPagarPinPad(false);
   };
 
@@ -326,16 +339,25 @@ export default function HomeScreen() {
     selectedDatoAdicional,
     listdetallepago,
   ) => {
+    const tipoPagoDeUna = tipoPago.find(
+      (x) => x.id === parametrizacion.pagoOmisionDeUna,
+    );
+    const bancoDeUna = bancos.find(
+      (x) => x.id === parametrizacion.bancoOmisionDeUna,
+    );
+    if (!tipoPagoDeUna || !bancoDeUna) {
+      showAlert({
+        title: "Error",
+        message:
+          "No se ha configurado la forma de pago o el banco por defecto de DeUna",
+      });
+      return;
+    }
     setDetallepagodeuna({
-      tipopago_id: tipoPago.find(
-        (x) => x.id === parametrizacion.pagoOmisionDeUna,
-      ).id,
-      ct_banco: bancos.find((x) => x.id === parametrizacion.bancoOmisionDeUna)
-        .id,
-      banco: bancos.find((x) => x.id === parametrizacion.bancoOmisionDeUna)
-        .name,
-      formapago: tipoPago.find((x) => x.id === parametrizacion.pagoOmisionDeUna)
-        .name,
+      tipopago_id: tipoPagoDeUna.id,
+      ct_banco: bancoDeUna.id,
+      banco: bancoDeUna.name,
+      formapago: tipoPagoDeUna.name,
       numerodocumentobancario: response.transferNumber,
       valorpago: response.amount,
       transactionId: response.transactionId,
@@ -353,47 +375,50 @@ export default function HomeScreen() {
     valorTotal,
     recargo,
   ) => {
-    try {
-      let bancoObj = bancos.find(
-        (x) => x.valoradicional === response.codigoAdquirente,
-      );
+    const tipoPagoPinPad = tipoPago.find(
+      (x) => x.id === parametrizacion.pagoOmisionPinPad,
+    );
+    if (!tipoPagoPinPad) {
+      showAlert({
+        title: "Error",
+        message:
+          "No se ha configurado la forma de pago por defecto del PinPad",
+      });
+      return;
+    }
+    let bancoObj =
+      bancos.find((x) => x.valoradicional === response.codigoAdquirente) ?? {};
 
-      if (Object.keys(bancoObj).length === 0) {
-        bancoObj = bancos.find(
+    if (Object.keys(bancoObj).length === 0) {
+      bancoObj =
+        bancos.find(
           (x) =>
             x.name.toLowerCase() ===
             (response?.nombreAdquirente ?? "").trim().toLowerCase(),
-        );
-      }
-      const tarjetaObj = tarjetas.find(
-        (x) =>
-          x.name.toLowerCase() ===
-          (response?.aplicacionEMV ?? "").trim().toLowerCase(),
-      );
-
-      setDetallepagodeuna({
-        tipopago_id: tipoPago.find(
-          (x) => x.id === parametrizacion.pagoOmisionPinPad,
-        ).id,
-        formapago: tipoPago.find(
-          (x) => x.id === parametrizacion.pagoOmisionPinPad,
-        ).name,
-        banco_id: bancoObj?.id,
-        banco: bancoObj?.name,
-        pago: valorTotal,
-        recargo: recargo,
-        referenciavoucher: response.referencia,
-        voucher: response.lote,
-        tarjeta_id: tarjetaObj?.id,
-        tarjeta: tarjetaObj?.descripcion,
-        deuna_response: JSON.stringify(response),
-      });
-
-      setIsOpenModalPagarPinPad(false);
-      setisconfirmado(true);
-    } catch (error) {
-      console.log(error);
+        ) ?? {};
     }
+    const tarjetaObj = tarjetas.find(
+      (x) =>
+        x.name.toLowerCase() ===
+        (response?.aplicacionEMV ?? "").trim().toLowerCase(),
+    );
+
+    setDetallepagodeuna({
+      tipopago_id: tipoPagoPinPad.id,
+      formapago: tipoPagoPinPad.name,
+      ct_banco: bancoObj?.id ?? 0,
+      banco: bancoObj?.name,
+      valorpago: valorTotal,
+      recargo: recargo,
+      referenciavoucher: response.referencia ?? "",
+      lotevoucher: response.lote ?? "",
+      ct_tarjeta: tarjetaObj?.id ?? 0,
+      tarjeta: tarjetaObj?.name,
+      deuna_response: JSON.stringify(response),
+    });
+
+    setIsOpenModalPagarPinPad(false);
+    setisconfirmado(true);
   };
 
   useFocusEffect(
@@ -599,6 +624,7 @@ export default function HomeScreen() {
                   arrDatalado.push({
                     codigo_transactor: item.codigo_transactor.split(",")[0],
                     posicion: item.posicion,
+                    lado: item.lado,
                     proforma: item.proforma,
                   });
                 } else if (item.proforma) {
@@ -619,6 +645,7 @@ export default function HomeScreen() {
                     {
                       codigo_transactor: item.codigo_transactor.split(",")[0],
                       posicion: item.posicion,
+                      lado: item.lado,
                       proforma: item.proforma,
                     },
                   ],
@@ -1042,6 +1069,7 @@ export default function HomeScreen() {
       pruebatecnica: false,
       saldoFacturas: 0,
       valorAnticipo: 0,
+      cupoCreditoCliente: 0,
     });
   };
 
@@ -1408,6 +1436,9 @@ export default function HomeScreen() {
               resp_arrPagosanticipados: cliente.pagosanticipados ?? [],
               establecimiento_contable_id: establecimiento_contable,
               saldoFacturas: dataProforma.saldoFacturas ?? 0,
+              cupoCreditoCliente: parseFloat(
+                (cliente.cupocredito ?? 0) - (dataProforma.saldoFacturas ?? 0),
+              ),
               valorAnticipo:
                 cliente.pagoanticipado &&
                   parametrizacion.facturasAnticipadasAnticipo
@@ -1584,6 +1615,9 @@ export default function HomeScreen() {
                 resp_cupocredito: itemSupplier.cupocredito ?? 0,
                 resp_arrPagosanticipados: resp.data.pagosanticipados ?? [],
                 saldoFacturas: itemSupplier.saldoFacturas ?? 0,
+                cupoCreditoCliente: parseFloat(
+                  defaultCupocredito - (itemSupplier.saldoFacturas ?? 0),
+                ),
                 valorAnticipo:
                   itemSupplier.pagoanticipado &&
                     parametrizacion.facturasAnticipadasAnticipo
@@ -1988,6 +2022,7 @@ export default function HomeScreen() {
                       diasplazo: 0,
                       nombrecomercial: "",
                       saldoFacturas: 0,
+                      cupoCreditoCliente: 0,
                     });
                   } else {
                     let arrAnticipos = [];
@@ -2086,6 +2121,10 @@ export default function HomeScreen() {
                       resp_arrPagosanticipados:
                         data.item.pagosanticipados ?? [],
                       saldoFacturas: data.item.saldoFacturas ?? 0,
+                      cupoCreditoCliente: parseFloat(
+                        (data.item.cupocredito ?? 0) -
+                          (data.item.saldoFacturas ?? 0),
+                      ),
                       valorAnticipo:
                         data.item.pagoanticipado &&
                           parametrizacion.facturasAnticipadasAnticipo
@@ -2268,6 +2307,9 @@ export default function HomeScreen() {
                 resp_cupocredito: itemSupplier.cupocredito ?? 0,
                 resp_arrPagosanticipados: resp.data.pagosanticipados ?? [],
                 saldoFacturas: itemSupplier.saldoFacturas ?? 0,
+                cupoCreditoCliente: parseFloat(
+                  defaultCupocredito - (itemSupplier.saldoFacturas ?? 0),
+                ),
                 valorAnticipo:
                   itemSupplier.pagoanticipado &&
                     parametrizacion.facturasAnticipadasAnticipo
@@ -2424,6 +2466,13 @@ export default function HomeScreen() {
       resp_cupocredito: data.cupocredito ?? 0,
       resp_arrPagosanticipados: data.pagosanticipados ?? [],
       saldoFacturas: data.saldoFacturas ?? 0,
+      cupoCreditoCliente: parseFloat(
+        defaultCupocredito - (data.saldoFacturas ?? 0),
+      ),
+      valorAnticipo:
+        defaultPagoanticipado && parametrizacion.facturasAnticipadasAnticipo
+          ? (data.pagosanticipados ?? 0)
+          : 0,
     });
     if (selectedSurtidor?.proforma) {
       searchPlaca(false, data.id);
@@ -2860,7 +2909,8 @@ export default function HomeScreen() {
     try {
       const objTransactor = arrDataTransactorSurtidores.find(
         (data) =>
-          data.estado_transactor === "Ci" &&
+          (data.estado_transactor === "Ci" ||
+            data.estado_transactor === "Di") &&
           data.codigofila_transactor === selectedSurtidor.codigo_transactor,
       );
 
@@ -3053,7 +3103,7 @@ export default function HomeScreen() {
         }
       }
 
-      const errores = validarCamposPago();
+      const errores = isconfirmado ? {} : validarCamposPago();
       if (
         Object.keys(errores).length > 0 &&
         !parametrizacion.noValidarCamposPagoTarjeta
@@ -3105,13 +3155,23 @@ export default function HomeScreen() {
         let formapago_id = objHeadBilling.autoconsumo
           ? parametrizacion?.tipoPagoAutoconsumo?.tipoPagoAutoconsumo
           : objPago.formapago_id;
-        const banco_id = objPago.banco_id;
-        const numerocuentabancaria = objPago.numerocuentabancaria;
-        const numerodocumentobancario = objPago.numerodocumentobancario;
-        const tarjeta_id = objPago.tarjeta_id;
-        const referenciavoucher = objPago.referenciavoucher;
-        const lotevoucher = objPago.lotevoucher;
+        let banco_id = objPago.banco_id;
+        let numerocuentabancaria = objPago.numerocuentabancaria;
+        let numerodocumentobancario = objPago.numerodocumentobancario;
+        let tarjeta_id = objPago.tarjeta_id;
+        let referenciavoucher = objPago.referenciavoucher;
+        let lotevoucher = objPago.lotevoucher;
         const fechavencimientopago = objPago.fechavencimiento;
+
+        if (isconfirmado && detallepagodeuna?.tipopago_id) {
+          formapago_id = detallepagodeuna.tipopago_id;
+          banco_id = detallepagodeuna.ct_banco ?? 0;
+          numerodocumentobancario =
+            detallepagodeuna.numerodocumentobancario ?? "";
+          tarjeta_id = detallepagodeuna.ct_tarjeta ?? 0;
+          referenciavoucher = detallepagodeuna.referenciavoucher ?? "";
+          lotevoucher = detallepagodeuna.lotevoucher ?? "";
+        }
 
         const valorImpuestoIVA = surtidorSeleccionado.producto.ct_porcentajeiva
           ? parseFloat(surtidorSeleccionado.producto.ct_porcentajeiva.valor)
@@ -3654,6 +3714,16 @@ export default function HomeScreen() {
       correo: cliente.correo ?? "",
       arrPagosanticipados: (cliente.pagoanticipado ?? false) ? pagos : [],
       pagoanticipado: cliente.pagoanticipado ?? false,
+      resp_pagoanticipado: cliente.pagoanticipado ?? false,
+      resp_cupocredito: cliente.cupocredito ?? 0,
+      resp_arrPagosanticipados: pagos,
+      cupocredito: cliente.cupocredito ?? 0,
+      tipoventa: (cliente.cupocredito ?? 0) > 0 ? "CR" : "CO",
+      valorAnticipo:
+        (cliente.pagoanticipado ?? false) &&
+        parametrizacion.facturasAnticipadasAnticipo
+          ? (cliente.pagosanticipados ?? 0)
+          : 0,
     });
 
     let arrAnticipos = [];
@@ -3967,7 +4037,8 @@ export default function HomeScreen() {
 
     const objTransactor = arrDataTransactorSurtidores.find(
       (data) =>
-        data.estado_transactor === "Ci" &&
+        (data.estado_transactor === "Ci" ||
+          data.estado_transactor === "Di") &&
         data.codigofila_transactor === selectedSurtidor?.codigo_transactor,
     );
 
@@ -3981,6 +4052,10 @@ export default function HomeScreen() {
       (surt) =>
         surt.codigo_transactor === objTransactor[0] + "," + objTransactor[8],
     );
+
+    if (!objSurtidor) {
+      return null;
+    }
 
     let surtidorSeleccionado = objSurtidor;
 
@@ -4144,6 +4219,19 @@ export default function HomeScreen() {
         onLeftPress={() => navigation.openDrawer()}
         title={turnoActivo ? turnoActivo.nombre : "No hay turno activo"}
       />
+      {isDevBuild ? (
+        <View
+          style={[
+            styles.devBanner,
+            enviarComandos ? styles.devBannerProd : styles.devBannerDev,
+          ]}
+        >
+          <Switch value={enviarComandos} onValueChange={toggleModoProduccion} />
+          <Text style={styles.devBannerLabel}>
+            Modo producción (enviar comandos al surtidor)
+          </Text>
+        </View>
+      ) : null}
       {!turnoActivo ? (
         <View
           style={{
@@ -4195,8 +4283,14 @@ export default function HomeScreen() {
       ) : turnoActivo.estado_turno === "I" ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
+          style={
+            parametrizacion?.nuevoDisenoGasolinera
+              ? styles.scrollNuevoDiseno
+              : undefined
+          }
           contentContainerStyle={[
             styles.scrollViewContent,
+            parametrizacion?.nuevoDisenoGasolinera && styles.scrollContentNuevo,
             { paddingBottom: insets.bottom },
           ]}
           refreshControl={
@@ -4227,287 +4321,62 @@ export default function HomeScreen() {
               />
             </Portal>
           )}
-          <View style={styles.container}>
+          <View
+            style={
+              parametrizacion?.nuevoDisenoGasolinera
+                ? styles.containerNuevo
+                : styles.container
+            }
+          >
             {surtidores.length > 0 &&
-              surtidores.map((item, index) => {
-                const itemsPerRow = orientation === "portrait" ? 2 : 3;
-                if (index % itemsPerRow === 0) {
-                  return (
-                    <View key={index} style={styles.row}>
-                      {surtidores
-                        .slice(index, index + itemsPerRow)
-                        .map((subItem, subIndex) => {
-                          return (
-                            <View key={subIndex} style={styles.surface}>
-                              <Text
-                                style={{ fontWeight: "bold", marginBottom: 5 }}
-                              >
-                                {subItem.estacion.toUpperCase()}
-                              </Text>
-                              {subItem.lados
-                                .sort((a, b) =>
-                                  a.posicion < b.posicion ? -1 : 1,
-                                )
-                                .map((dataLado, idx) => {
-                                  const informationTransactor =
-                                    arrDataTransactorSurtidores.find(
-                                      (x) =>
-                                        x.codigofila_transactor ===
-                                        dataLado.codigo_transactor,
-                                    );
-                                  const objInfoSurtidor = arrsurtidores.find(
-                                    (x) =>
-                                      x.codigo_transactor ===
-                                      (informationTransactor?.codigofila_transactor ??
-                                        "") +
-                                      "," +
-                                      informationTransactor?.codigopistola_transactor ??
-                                      "",
-                                  );
-
-                                  const arrFilaSurtidores =
-                                    arrsurtidores.filter(
-                                      (x) =>
-                                        x.codigo_transactor.split(",")[0] ===
-                                        (informationTransactor?.codigofila_transactor ??
-                                          ""),
-                                    );
-                                  const surtidoresFila_ids = arrFilaSurtidores
-                                    .map((obj) => obj.id)
-                                    .join(",");
-
-                                  let colorFondo = "#FFFFFF";
-                                  let nombreGasolina = "";
-                                  let surtidor = 0;
-                                  let surtidor_id = 0;
-
-                                  if (
-                                    objInfoSurtidor &&
-                                    !estadosTransactor.cobrando.includes(
-                                      informationTransactor?.estado_transactor ??
-                                      "",
-                                    )
-                                  ) {
-                                    colorFondo =
-                                      objInfoSurtidor.tipo_combustible.valor;
-                                    nombreGasolina =
-                                      objInfoSurtidor.tipo_combustible
-                                        .descripcion;
-                                  } else if (
-                                    objInfoSurtidor &&
-                                    estadosTransactor.cobrando.includes(
-                                      informationTransactor?.estado_transactor ??
-                                      "",
-                                    )
-                                  ) {
-                                    colorFondo = "#BFB9B9";
-                                  }
-
-                                  if (!objInfoSurtidor) {
-                                    const findFirstBoquilla =
-                                      arrsurtidores.find(
-                                        (x) =>
-                                          x.codigo_transactor.split(",")[0] ===
-                                          (informationTransactor?.codigofila_transactor ??
-                                            ""),
-                                      );
-                                    surtidor_id = findFirstBoquilla?.id ?? 0;
-                                    surtidor = findFirstBoquilla ?? 0;
-                                  } else {
-                                    surtidor_id = objInfoSurtidor?.id ?? 0;
-                                    surtidor = objInfoSurtidor ?? 0;
-                                  }
-
-                                  const mostrarBotonBloqueo =
-                                    !dataLado.proforma &&
-                                    informationTransactor?.estado_transactor ===
-                                    "Ci" &&
-                                    parametrizacion.activarBotonDesbloquearSurtidor;
-
-                                  return (
-                                    <View
-                                      key={idx}
-                                      style={{
-                                        flexDirection: "row",
-                                        marginBottom: 10,
-                                      }}
-                                    >
-                                      <Pressable
-                                        style={({ pressed }) => [
-                                          {
-                                            borderRadius: 8,
-                                            flexDirection: "row",
-                                          },
-                                          pressed && sharedStyles.pressed,
-                                        ]}
-                                        onPress={() => {
-                                          selectSurtidor({
-                                            ...dataLado,
-                                            surtidor: surtidor,
-                                            surtidoresFila_ids:
-                                              surtidoresFila_ids &&
-                                                surtidoresFila_ids !== ""
-                                                ? surtidoresFila_ids
-                                                : surtidor_id,
-                                            surtidor_id: surtidor_id,
-                                            codigo_transactor:
-                                              dataLado?.codigo_transactor ?? "",
-                                            nombre: `${subItem.estacion.toUpperCase()}-${dataLado.posicion === "L"
-                                              ? "LADO B"
-                                              : "LADO A"
-                                              }`,
-                                            transaccion_transactor:
-                                              informationTransactor?.transaccion_transactor ??
-                                              0,
-                                          });
-                                        }}
-                                      >
-                                        <View
-                                          style={{
-                                            backgroundColor: colorFondo,
-                                            padding: 10,
-                                            borderRadius: 12,
-                                          }}
-                                        >
-                                          <Text
-                                            style={{
-                                              textAlign: "center",
-                                              fontSize: 10,
-                                              fontWeight: "bold",
-                                            }}
-                                          >
-                                            {dataLado.posicion === "L"
-                                              ? "LADO B"
-                                              : "LADO A"}
-                                          </Text>
-                                          {estadosTransactor.cobrando.includes(
-                                            informationTransactor?.estado_transactor ??
-                                            "",
-                                          ) ? (
-                                            <PagandoSVG
-                                              height={80}
-                                              width={80}
-                                            />
-                                          ) : estadosTransactor.dispensando.includes(
-                                            informationTransactor?.estado_transactor ??
-                                            "",
-                                          ) ? (
-                                            <DispensandoSVG
-                                              height={80}
-                                              width={80}
-                                            />
-                                          ) : (
-                                            <DispensadorSVG
-                                              height={80}
-                                              width={80}
-                                            />
-                                          )}
-                                          <Text
-                                            style={{
-                                              textAlign: "center",
-                                              fontWeight: "500",
-                                              fontSize: 10,
-                                            }}
-                                          >
-                                            {nombreGasolina}
-                                          </Text>
-                                        </View>
-                                        <View
-                                          style={{
-                                            marginLeft: 5,
-                                            alignContent: "center",
-                                            justifyContent: "center",
-                                          }}
-                                        >
-                                          <Text
-                                            style={{
-                                              fontWeight: "bold",
-                                              fontSize: 12,
-                                            }}
-                                          >
-                                            Galones:
-                                          </Text>
-                                          <Text>
-                                            {informationTransactor?.galones ??
-                                              "0.0000"}
-                                          </Text>
-                                          <Text
-                                            style={{
-                                              fontWeight: "bold",
-                                              fontSize: 12,
-                                            }}
-                                          >
-                                            Dolares:
-                                          </Text>
-                                          <Text>
-                                            $
-                                            {informationTransactor?.dolares ??
-                                              "0.0000"}{" "}
-                                          </Text>
-                                          {dataLado.proforma && (
-                                            <>
-                                              <Text
-                                                style={{
-                                                  color: "#000000",
-                                                  fontWeight: "bold",
-                                                  fontSize: 12,
-                                                }}
-                                              >
-                                                DOC #
-                                              </Text>
-                                              <Text>
-                                                {dataLado.proforma.id}
-                                              </Text>
-                                            </>
-                                          )}
-                                        </View>
-                                      </Pressable>
-                                      {mostrarBotonBloqueo && (
-                                        <Pressable
-                                          onPress={() => {
-                                            desbloquearSurtidorActivo({
-                                              ...dataLado,
-                                              surtidor: surtidor,
-                                              surtidoresFila_ids:
-                                                surtidoresFila_ids &&
-                                                  surtidoresFila_ids !== ""
-                                                  ? surtidoresFila_ids
-                                                  : surtidor_id,
-                                              surtidor_id: surtidor_id,
-                                              codigo_transactor:
-                                                dataLado?.codigo_transactor ??
-                                                "",
-                                              nombre: `${subItem.estacion.toUpperCase()}-${dataLado.posicion === "L"
-                                                ? "LADO B"
-                                                : "LADO A"
-                                                }`,
-                                              transaccion_transactor:
-                                                informationTransactor?.transaccion_transactor ??
-                                                0,
-                                            });
-                                          }}
-                                          style={({ pressed }) => [
-                                            styles.botonBloqueado,
-                                            pressed && sharedStyles.pressed,
-                                          ]}
-                                        >
-                                          <Ionicons
-                                            name="lock-closed"
-                                            size={20}
-                                            color="#fff"
-                                          />
-                                        </Pressable>
-                                      )}
-                                    </View>
-                                  );
-                                })}
-                            </View>
-                          );
-                        })}
-                    </View>
-                  );
-                }
-              })}
+              (parametrizacion?.nuevoDisenoGasolinera ? (
+                surtidores.map((subItem, subIndex) => (
+                  <SurtidorEstacionCard
+                    key={`${subItem.id ?? subItem.estacion}-${subIndex}`}
+                    subItem={subItem}
+                    usarDisenoNuevo={true}
+                    arrDataTransactorSurtidores={arrDataTransactorSurtidores}
+                    arrsurtidores={arrsurtidores}
+                    estadosTransactor={estadosTransactor}
+                    parametrizacion={parametrizacion}
+                    selectedSurtidor={selectedSurtidor}
+                    selectSurtidor={selectSurtidor}
+                    desbloquearSurtidorActivo={desbloquearSurtidorActivo}
+                    findEstadoSurtidor={findEstadoSurtidor}
+                  />
+                ))
+              ) : (
+                surtidores.map((item, index) => {
+                  const itemsPerRow = orientation === "portrait" ? 2 : 3;
+                  if (index % itemsPerRow === 0) {
+                    return (
+                      <View key={index} style={styles.row}>
+                        {surtidores
+                          .slice(index, index + itemsPerRow)
+                          .map((subItem, subIndex) => (
+                            <SurtidorEstacionCard
+                              key={`${subItem.id ?? subItem.estacion}-${subIndex}`}
+                              subItem={subItem}
+                              usarDisenoNuevo={false}
+                              arrDataTransactorSurtidores={
+                                arrDataTransactorSurtidores
+                              }
+                              arrsurtidores={arrsurtidores}
+                              estadosTransactor={estadosTransactor}
+                              parametrizacion={parametrizacion}
+                              selectedSurtidor={selectedSurtidor}
+                              selectSurtidor={selectSurtidor}
+                              desbloquearSurtidorActivo={
+                                desbloquearSurtidorActivo
+                              }
+                              findEstadoSurtidor={findEstadoSurtidor}
+                            />
+                          ))}
+                      </View>
+                    );
+                  }
+                })
+              ))}
           </View>
         </ScrollView>
       ) : (
@@ -4616,6 +4485,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 5,
   },
+  containerNuevo: {
+    flex: 1,
+    paddingHorizontal: 4,
+    paddingTop: 4,
+    paddingBottom: 2,
+  },
+  scrollNuevoDiseno: {
+    backgroundColor: "#e8eaed",
+  },
+  scrollContentNuevo: {
+    paddingBottom: 24,
+  },
   scrollViewContent: {
     paddingBottom: 20,
   },
@@ -4624,26 +4505,29 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 5,
   },
-  surface: {
-    flex: 1,
-    margin: 5,
-    marginBottom: 0,
-    padding: 10,
-    backgroundColor: "white",
+  devBanner: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 10,
+    marginHorizontal: 8,
+    marginTop: 2,
+    marginBottom: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
   },
-  botonBloqueado: {
-    position: "absolute",
-    right: 0,
-    bottom: 0,
-    zIndex: 10,
-    paddingVertical: 7,
-    paddingHorizontal: 9,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 5,
+  devBannerDev: {
+    backgroundColor: "#fff3cd",
+    borderColor: "#ffc107",
+  },
+  devBannerProd: {
+    backgroundColor: "#d4edda",
+    borderColor: "#28a745",
+  },
+  devBannerLabel: {
+    color: "#000",
+    fontSize: 11,
+    flex: 1,
+    marginLeft: 4,
   },
 });

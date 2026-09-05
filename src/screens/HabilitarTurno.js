@@ -9,8 +9,10 @@ import { useDeviceOrientation } from "@react-native-community/hooks";
 import CustomAppBar from "../components/CustomAppBar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { showAlert } from "../components/CustomAlert";
+import { useGasolineraComandos } from "../hooks/useGasolineraComandos";
 
 export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
+  const { isDesarrollo } = useGasolineraComandos();
   const navigation = useNavigation();
   const [turnoActivo, setTurnoActivo] = useState();
   const [estaciones, setEstaciones] = useState([]);
@@ -190,6 +192,13 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
   };
 
   const callDataLecturaTransactor = async (keyFila, url) => {
+    if (isDesarrollo) {
+      ToastAndroid.show(
+        "Modo desarrollo: comandos al surtidor desactivados",
+        ToastAndroid.SHORT,
+      );
+      return null;
+    }
     setIsLoading(true);
     const dataPost = { comando: `GT ${keyFila}@#`, url };
     let data;
@@ -248,6 +257,9 @@ export default function HabilitarTurno({ imprimir, status = "I", closeModal }) {
   };
 
   const bloquearDesbloquearSurtidor = async (codigoFila, tipoComando) => {
+    if (isDesarrollo) {
+      return null;
+    }
     setIsLoading(true);
     const url =
       (conexionTransactor?.url_post ?? "") +
